@@ -1,13 +1,20 @@
 <?php
 declare(strict_types=1);
 
+function env_get(string $name): ?string
+{
+    $value = getenv($name);
+    if ($value === false || $value === '') $value = $_ENV[$name] ?? $_SERVER[$name] ?? null;
+    return is_string($value) && $value !== '' ? $value : null;
+}
+
 /* Single DB connection. */
 function db(): PDO
 {
     static $pdo = null;
     if ($pdo instanceof PDO) return $pdo;
 
-    $url = getenv('XWORS_DATABASE_URL');
+    $url = env_get('XWORS_DATABASE_URL');
     if (!$url) throw new RuntimeException('XWORS_DATABASE_URL is not configured');
 
     $p = parse_url($url);
@@ -21,7 +28,8 @@ function db(): PDO
     $dsn = 'pgsql:host=' . $p['host'] .
         ';port=' . ($p['port'] ?? 5432) .
         ';dbname=' . ($database ?: 'postgres') .
-        ';sslmode=' . ($query['sslmode'] ?? 'require');
+        ';sslmode=' . ($query['sslmode'] ?? 'require') .
+        ';connect_timeout=5';
 
     $pdo = new PDO(
         $dsn,
@@ -39,6 +47,14 @@ function db(): PDO
 
 function ensure_schema(PDO $pdo): void
 {
+    // One cheap check per request instead of three DDL statements (serverless cold starts).
+    $state = $pdo->query(
+        "SELECT to_regclass('public.users') IS NOT NULL AS users_ok,
+                EXISTS (SELECT 1 FROM information_schema.columns
+                        WHERE table_schema = 'public' AND table_name = 'admins' AND column_name = '2fa') AS admins_ok"
+    )->fetch();
+    if (!empty($state['users_ok']) && !empty($state['admins_ok'])) return;
+
     $pdo->exec("CREATE TABLE IF NOT EXISTS admins (
         login VARCHAR(255) NOT NULL,
         password VARCHAR(255) NOT NULL,

@@ -3,13 +3,14 @@ declare(strict_types=1);
 require_once __DIR__ . '/connect.php';
 
 const AUTH_COOKIE = 'xwors';
+const CSRF_COOKIE = 'xwors_csrf';
 const PREAUTH_COOKIE = 'xwors_2fa';
 const AUTH_TTL = 86400;
 const PREAUTH_TTL = 300;
 
 function auth_secret(): string
 {
-    $secret = getenv('AUTH_SECRET');
+    $secret = env_get('AUTH_SECRET');
     if (!$secret || strlen($secret) < 32) {
         throw new RuntimeException('AUTH_SECRET must be configured and contain at least 32 characters');
     }
@@ -27,9 +28,27 @@ function redirect(string $url): never
     exit;
 }
 
+function csrf_seed(): string
+{
+    foreach ([AUTH_COOKIE, PREAUTH_COOKIE, CSRF_COOKIE] as $name) {
+        $v = $_COOKIE[$name] ?? null;
+        if (is_string($v) && $v !== '') return $v;
+    }
+    // Anonymous visitor (login page): per-browser random seed, set before any output.
+    $seed = bin2hex(random_bytes(16));
+    if (!headers_sent()) {
+        setcookie(CSRF_COOKIE, $seed, [
+            'expires' => time() + 86400, 'path' => '/', 'secure' => auth_is_https(),
+            'httponly' => true, 'samesite' => 'Strict',
+        ]);
+    }
+    $_COOKIE[CSRF_COOKIE] = $seed;
+    return $seed;
+}
+
 function csrf_token(): string
 {
-    return hash_hmac('sha256', 'xwors-admin-csrf', auth_secret());
+    return hash_hmac('sha256', 'xwors-admin-csrf|' . csrf_seed(), auth_secret());
 }
 
 function csrf_valid(): bool
@@ -40,7 +59,8 @@ function csrf_valid(): bool
 
 function auth_is_https(): bool
 {
-    return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    return env_get('VERCEL') !== null
+        || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
         || strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
 }
 

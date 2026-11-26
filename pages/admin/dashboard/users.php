@@ -1,4 +1,4 @@
-<?php require __DIR__.'/_layout.php'; dash_start('users','Список юзеров'); $users=[]; $error=null;
+<?php require_once __DIR__.'/_layout.php'; dash_start('users','Список юзеров'); $users=[]; $error=null;
 try { $users=db()->query('SELECT uuid::text AS uuid, "key" AS access_key, created_at, expires_at FROM users ORDER BY created_at DESC')->fetchAll(); }
 catch(Throwable $e){ error_log('Admin users page error: '.$e->getMessage()); $error='Не удалось загрузить пользователей. Проверьте структуру таблицы users в базе данных.'; } ?>
 <section class="panel-card table-panel"><div class="table-heading"><div><h2>Пользователи</h2><p>UUID, ключ доступа и сроки его действия</p></div><span class="count"><?= count($users) ?></span></div>

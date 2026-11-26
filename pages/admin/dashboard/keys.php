@@ -1,1 +1,1 @@
-<?php require __DIR__.'/_layout.php'; dash_start('keys','Ключи'); ?><section class="panel-card"><h2>Ключи доступа</h2><p>Управление ключами пока не подключено. Все существующие ключи доступны в разделе «Список юзеров».</p></section><?php dash_end(); ?>
+<?php require_once __DIR__.'/_layout.php'; dash_start('keys','Ключи'); ?><section class="panel-card"><h2>Ключи доступа</h2><p>Управление ключами пока не подключено. Все существующие ключи доступны в разделе «Список юзеров».</p></section><?php dash_end(); ?>

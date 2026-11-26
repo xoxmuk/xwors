@@ -1,19 +1,21 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "index.php", "use": "vercel-php@0.7.1" },
-    { "src": "pages/**/*.php", "use": "vercel-php@0.7.1" },
-    { "src": "api/router.php", "use": "vercel-php@0.7.1" }
-  ],
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/index.php": { "runtime": "vercel-php@0.9.0", "maxDuration": 10 }
+  },
   "routes": [
-    { "src": "/styles/(.*)", "dest": "/styles/$1" },
-    { "src": "/api/(authorization|logout)(?:\\.php)?", "dest": "/api/router.php" },
-    { "src": "/admin/dashboard/users/?", "dest": "/pages/admin/dashboard/users.php" },
-    { "src": "/admin/dashboard/keys/?", "dest": "/pages/admin/dashboard/keys.php" },
-    { "src": "/admin/dashboard/?", "dest": "/pages/admin/dashboard/index.php" },
-    { "src": "/admin/?", "dest": "/pages/admin/index.php" },
-    { "src": "/news(?:\\.php)?/?", "dest": "/pages/news.php" },
-    { "src": "/prices(?:\\.php)?/?", "dest": "/pages/prices.php" },
-    { "src": "/", "dest": "/pages/index.php" }
+    {
+      "src": "/(.*)",
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "same-origin",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+        "Content-Security-Policy": "default-src 'self'; img-src 'self' data:; frame-ancestors 'none'; form-action 'self'; base-uri 'none'"
+      },
+      "continue": true
+    },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/api/index.php" }
   ]
 }

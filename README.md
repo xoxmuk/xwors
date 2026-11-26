@@ -1,33 +1,51 @@
 # XWorsClient
 
-PHP 8+ / PostgreSQL. Public pages: `/`, `/news`, `/prices`. Admin login: `/admin`; dashboard: `/admin/dashboard/`.
+PHP 8+ / PostgreSQL. Публичные страницы: `/`, `/news`, `/prices`. Вход в админку: `/admin`, панель: `/admin/dashboard/`.
 
-## Environment variables
-- `XWORS_DATABASE_URL` — PostgreSQL connection URL.
-- `AUTH_SECRET` is temporarily hardcoded in `lib/auth.php`; replace it with an environment variable before deployment.
-
-The app creates `admins` and `users` tables and adds a `2fa` JSONB column to `admins`. The old `panel_login_attempts` table is no longer used and is dropped automatically by the application.
-
-## Admin credentials
-Both `admins.login` and `admins.password` store bcrypt hashes. Generate them:
-```bash
-php -r 'echo password_hash("hashed login", PASSWORD_BCRYPT), PHP_EOL;'
-php -r 'echo password_hash("hashed password", PASSWORD_BCRYPT), PHP_EOL;'
+## Структура
 ```
-Insert the hashes:
+api/index.php        единственная serverless-функция (front controller)
+lib/                 router, auth (cookie, CSRF, TOTP), actions (POST /api/*), connect (PostgreSQL)
+pages/               публичные страницы и админка
+public/styles        CSS (отдаётся Vercel как статика)
+public/scripts       app.js (кнопка «Копировать»)
+router.php           только для локального запуска
+vercel.json          runtime vercel-php + маршруты + заголовки безопасности
+```
+
+## Переменные окружения
+- `XWORS_DATABASE_URL` — PostgreSQL URL (`postgresql://user:pass@host:5432/db?sslmode=require`).
+- `AUTH_SECRET` — минимум 32 случайных символа: `php -r 'echo bin2hex(random_bytes(32));'`
+
+## Локальный запуск
+```bash
+cp .env.example .env   # заполнить значения
+php -S localhost:8000 -t public router.php
+```
+
+## Деплой на Vercel
+1. Залить проект в Git-репозиторий и импортировать его в Vercel (Framework Preset: **Other**, Build/Output не задавать).
+2. Project → Settings → Environment Variables: добавить `XWORS_DATABASE_URL` и `AUTH_SECRET` (Production и Preview).
+3. Deploy. Либо через CLI: `npm i -g vercel && vercel --prod`.
+
+Таблицы `admins` и `users` создаются автоматически при первом подключении к БД.
+
+## Учётные данные администратора
+`admins.login` и `admins.password` хранят bcrypt-хэши:
+```bash
+php -r 'echo password_hash("login", PASSWORD_BCRYPT), PHP_EOL;'
+php -r 'echo password_hash("password", PASSWORD_BCRYPT), PHP_EOL;'
+```
 ```sql
 INSERT INTO public.admins (login, password) VALUES ('$2y$...', '$2y$...');
 ```
 
 ## Google Authenticator / Aegis (TOTP)
-1. Sign in to `/admin` using login and password.
-2. Open Dashboard → Безопасность.
-3. Click “Добавить Google Authenticator”.
-4. In Google Authenticator choose to add an account using a setup key. Enter the displayed secret.
-5. Enter the current 6-digit code to enable 2FA.
-6. Next logins require password and the rotating 6-digit code.
+1. Войти в `/admin`, открыть Безопасность (`/admin/dashboard/security`).
+2. «Добавить Google Authenticator», ввести секрет в приложении, подтвердить 6-значным кодом.
+3. Дальше вход: логин + пароль → код на втором шаге.
 
-TOTP is RFC 6238 compatible: SHA1, 6 digits, 30-second interval. Keep the setup secret safe. If the authenticator is lost, reset the administrator’s `2fa` JSONB value to `{"enabled":0,"secret":null}` in the database after verifying identity.
+Если доступ к аутентификатору потерян, сбросить `2fa` в БД: `UPDATE admins SET "2fa" = '{"enabled":0,"secret":null}'`.
 
-## Users table
-`users`: `uuid`, `key`, `created_at`, `expires_at`. A NULL `expires_at` means the key does not expire.
+## Таблица users
+`uuid`, `key`, `created_at`, `expires_at` (NULL — бессрочный ключ).
