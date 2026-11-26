@@ -3,7 +3,8 @@
   "builds": [
     { "src": "api/index.php", "use": "vercel-php@0.7.1" },
     { "src": "styles/**/*.css", "use": "@vercel/static" },
-    { "src": "scripts/**/*.js", "use": "@vercel/static" }
+    { "src": "scripts/**/*.js", "use": "@vercel/static" },
+    { "src": "favicon.ico", "use": "@vercel/static" }
   ],
   "routes": [
     {

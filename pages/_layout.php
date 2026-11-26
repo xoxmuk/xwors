@@ -11,7 +11,7 @@ function public_start(string $active, string $title): void {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= $t ?> — XWorsClient</title>
-    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="stylesheet" href="/styles/index.css">
 </head>
 <body class="root">

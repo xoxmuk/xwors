@@ -18,7 +18,7 @@ public_start('news', 'Новости');
             </ul>
             <p>Какая то очень большая мега большая информация которая очень интересна.</p>
             <p>Какая то информация</p>
-            <img src="https://cataas.com/cat/cute/says/%D0%9A%D0%90%D0%9A%D0%9E%D0%99%20%D0%95%D0%A9%D0%81%20%D0%9A%D0%9E%D0%A2%3F" alt="cat">
+            <img src="https://cataas.com/cat/cute/says/%D0%9A%D0%90%D0%9A%D0%9E%D0%99%20%D0%95%D0%A9%D0%81%20%D0%9A%D0%9E%D0%A2%3F.png" alt="cat">
             <span>Чего, какой ещё кот?</span>
         </div>
     </div>
