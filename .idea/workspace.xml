@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="95d5a405-b495-40fc-b55f-fc415862849a" name="Изменения" comment="0.0.4" />
+    <list default="true" id="95d5a405-b495-40fc-b55f-fc415862849a" name="Изменения" comment="0.0.5">
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -55,6 +57,7 @@
     <MESSAGE value="0.0.2" />
     <MESSAGE value="0.0.3" />
     <MESSAGE value="0.0.4" />
-    <option name="LAST_COMMIT_MESSAGE" value="0.0.4" />
+    <MESSAGE value="0.0.5" />
+    <option name="LAST_COMMIT_MESSAGE" value="0.0.5" />
   </component>
 </project>

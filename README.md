@@ -2,17 +2,6 @@
 
 PHP 8+ / PostgreSQL. Публичные страницы: `/`, `/news`, `/prices`. Вход в админку: `/admin`, панель: `/admin/dashboard/`.
 
-## Структура
-```
-api/index.php        единственная serverless-функция (front controller)
-lib/                 router, auth (cookie, CSRF, TOTP), actions (POST /api/*), connect (PostgreSQL)
-pages/               публичные страницы и админка
-styles/              CSS (отдаётся Vercel как статика через @vercel/static)
-scripts/             app.js (кнопка «Копировать»)
-router.php           только для локального запуска
-vercel.json          vercel-php@0.7.1 + @vercel/static + маршруты + заголовки безопасности
-```
-
 ## Переменные окружения
 - `XWORS_DATABASE_URL` — PostgreSQL URL (`postgresql://user:pass@host:5432/db?sslmode=require`).
 - `AUTH_SECRET` — минимум 32 случайных символа: `php -r 'echo bin2hex(random_bytes(32));'`
