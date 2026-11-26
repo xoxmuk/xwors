@@ -7,11 +7,11 @@ public_start('prices', 'Покупка');
         <h1>Покупка</h1>
         <p>Информация о тарифах и способах приобретения доступа появится здесь.</p>
     </div>
-    <div class="card">
-        <h1>Доступные товары</h1>
-        <div>
+    <div>
+        <h1 class="center">Доступные товары</h1>
+        <div class="row">
 
-            <div class="col">
+            <div class="card col">
                 <div>
                     <img src="" alt="Product Image">
                     <div class="row"><h2>Product Name</h2><span class="status" data-color="lime"><i></i> Undetected</span></div>
@@ -26,7 +26,7 @@ public_start('prices', 'Покупка');
                 <a href="#">Buy</a>
             </div>
 
-            <div class="col">
+            <div class="card col">
                 <div>
                     <img src="" alt="Product Image">
                     <div class="row"><h2>Product Name</h2><span class="status" data-color="lime"><i></i> Undetected</span></div>
