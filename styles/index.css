@@ -111,7 +111,7 @@ a:hover { color: var(--white); }
     padding: 38px 27px;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow-y: hidden;
 }
 a.side {
     min-height: 47px;

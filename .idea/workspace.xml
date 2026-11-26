@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="95d5a405-b495-40fc-b55f-fc415862849a" name="Изменения" comment="0.0.5">
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+    <list default="true" id="95d5a405-b495-40fc-b55f-fc415862849a" name="Изменения" comment="0.0.7">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/admin/dashboard/index.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/admin/dashboard/index.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/admin/dashboard/keys.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/admin/dashboard/keys.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/admin/dashboard/users.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/admin/dashboard/users.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/index.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/index.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/news.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/news.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/prices.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/prices.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/styles/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/styles/index.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -12,36 +19,36 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "xoxmuk"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;xoxmuk&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/xoxmuk/xwors.git",
-    "accountId": "54e5e9a3-1851-41c7-a384-ddcd1f7efccf"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/xoxmuk/xwors.git&quot;,
+    &quot;accountId&quot;: &quot;54e5e9a3-1851-41c7-a384-ddcd1f7efccf&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 5,
-  "fromUser": false
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5,
+  &quot;fromUser&quot;: false
+}</component>
   <component name="ProjectId" id="3MfDT07evUdaHCb8YZCMkY81tfs" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Задача по умолчанию">
       <changelist id="95d5a405-b495-40fc-b55f-fc415862849a" name="Изменения" comment="" />
@@ -58,6 +65,8 @@
     <MESSAGE value="0.0.3" />
     <MESSAGE value="0.0.4" />
     <MESSAGE value="0.0.5" />
-    <option name="LAST_COMMIT_MESSAGE" value="0.0.5" />
+    <MESSAGE value="0.0.6" />
+    <MESSAGE value="0.0.7" />
+    <option name="LAST_COMMIT_MESSAGE" value="0.0.7" />
   </component>
 </project>
