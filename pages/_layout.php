@@ -23,7 +23,6 @@ function public_start(string $active, string $title): void {
 <?php endforeach; ?>
     </nav>
     <section class="sidebar-bottom center col">
-        <span class="status" data-color="lime"><i></i> Undetected</span>
         <span>&copy; <?= date('Y') ?> XWorsClient</span>
         <span>Site designed by <a class="tooltip" href="https://t.me/ialonet" data-tooltip="In no way involved in the administration or management of the site.">@ialonet</a></span>
     </section>
