@@ -9,11 +9,11 @@ public_start('prices', 'Покупка');
     </div>
     <div>
         <h1 class="center">Доступные товары</h1>
-        <div class="row">
+        <div class="center row">
 
             <div class="card col">
                 <div>
-                    <img src="" alt="Product Image">
+                    <img src="https://i.imgur.com/gPOklv3.png" alt="Product Image">
                     <div class="row"><h2>Product Name</h2><span class="status" data-color="lime"><i></i> Undetected</span></div>
                 </div>
                 <div>
@@ -28,7 +28,7 @@ public_start('prices', 'Покупка');
 
             <div class="card col">
                 <div>
-                    <img src="" alt="Product Image">
+                    <img src="https://i.imgur.com/gPOklv3.png" alt="Product Image">
                     <div class="row"><h2>Product Name</h2><span class="status" data-color="lime"><i></i> Undetected</span></div>
                 </div>
                 <div>
