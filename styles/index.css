@@ -39,6 +39,9 @@ body {
     background: var(--bg);
     font: 15px/1.55 Arial, Helvetica, sans-serif;
 }
+aside {
+    overflow-y: hidden;
+}
 ul, ol { list-style: none; }
 img, picture, video, canvas, svg { display: block; max-width: 100%; }
 input, button, textarea, select { font: inherit; color: inherit; }
@@ -111,7 +114,7 @@ a:hover { color: var(--white); }
     padding: 38px 27px;
     display: flex;
     flex-direction: column;
-    overflow-y: hidden;
+    overflow-y: auto;
 }
 a.side {
     min-height: 47px;
