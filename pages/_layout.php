@@ -8,10 +8,11 @@ function public_start(string $active, string $title): void {
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?= $t ?> — XWorsClient</title>
-<link rel="stylesheet" href="/styles/index.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><?= $t ?> — XWorsClient</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/styles/index.css">
 </head>
 <body class="root">
 <aside class="sidebar col">
