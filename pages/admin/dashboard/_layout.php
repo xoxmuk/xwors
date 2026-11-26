@@ -30,7 +30,7 @@ function dash_start(string $active, string $title): void
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title><?= e($title) ?> — XWorsClient Admin</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
     <link rel="stylesheet" href="/styles/index.css">
     <script src="/scripts/app.js" defer></script>
 </head>
