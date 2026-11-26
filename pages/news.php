@@ -9,17 +9,7 @@ public_start('news', 'Новости');
             <h1>Релиз</h1>
         </div>
         <div>
-            <h2>Какая то глава</h2>
-            <p>Какая то информация.</p>
-            <ul>
-                <li><p>1</p></li>
-                <li><p>2</p></li>
-                <li><p>3</p></li>
-            </ul>
-            <p>Какая то очень большая мега большая информация которая очень интересна.</p>
-            <p>Какая то информация</p>
-            <img src="https://developer.mozilla.org/shared-assets/images/examples/grapefruit-slice.jpg" alt="cat">
-            <span>Чего, какой ещё кот?</span>
+            <p>Какая то очень большая, мега большая информация, которая очень интересна.</p>
         </div>
     </div>
 </section>
