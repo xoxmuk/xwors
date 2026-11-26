@@ -2,8 +2,8 @@
 require_once __DIR__ . '/_layout.php';
 public_start('index', 'Главная');
 ?>
-<section class="news">
-    <div class="news-card">
+<section class="content">
+    <div class="card">
         <div class="row center">
             <h1>Добро пожаловать</h1>
         </div>

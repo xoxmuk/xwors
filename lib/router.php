@@ -38,7 +38,7 @@ function route_resolve(): ?string
     http_response_code(404);
     header('Content-Type: text/html; charset=utf-8');
     echo '<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-       . '<title>404 — XWorsClient</title><link rel="stylesheet" href="/styles/index.css"></head>'
+       . '<title>404 — XWorsClient</title><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="stylesheet" href="/styles/index.css"></head>'
        . '<body class="auth-page"><main class="auth-card center"><h1>404</h1><p>Страница не найдена.</p>'
        . '<a class="back-link" href="/">Вернуться на сайт</a></main></body></html>';
     return null;

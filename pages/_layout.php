@@ -11,7 +11,8 @@ function public_start(string $active, string $title): void {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= $t ?> — XWorsClient</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="/styles/index.css">
 </head>
 <body class="root">
@@ -28,7 +29,7 @@ function public_start(string $active, string $title): void {
         <span>Site designed by <a class="tooltip" href="https://t.me/ialonet" data-tooltip="In no way involved in the administration or management of the site.">@ialonet</a></span>
     </section>
 </aside>
-<main class="content">
+<main class="main">
 <div class="topline"><span class="label"><?= $t ?></span></div>
 <?php } function public_end(): void { ?>
 </main>

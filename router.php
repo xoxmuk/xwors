@@ -10,6 +10,11 @@ if (is_file($env)) {
     }
 }
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+if ($path === '/favicon.ico' && is_file(__DIR__ . $path)) {
+    header('Content-Type: image/x-icon');
+    readfile(__DIR__ . $path);
+    return true;
+}
 if (preg_match('#^/(styles|scripts)/[\w./-]+$#', $path) && !str_contains($path, '..') && is_file(__DIR__ . $path)) {
     return false;
 }

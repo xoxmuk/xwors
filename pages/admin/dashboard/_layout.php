@@ -30,7 +30,8 @@ function dash_start(string $active, string $title): void
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title><?= e($title) ?> — XWorsClient Admin</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="/styles/index.css">
     <script src="/scripts/app.js" defer></script>
 </head>
@@ -47,7 +48,7 @@ function dash_start(string $active, string $title): void
         <form method="post" action="/api/logout"><input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>"><button class="logout-button" type="submit">Выйти</button></form>
     </section>
 </aside>
-<main class="content admin-content">
+<main class="main admin-main">
 <div class="topline"><span class="label"><?= e($title) ?></span></div>
 <?php } function dash_end(): void { ?>
 </main>

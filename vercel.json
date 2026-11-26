@@ -18,6 +18,7 @@
       },
       "continue": true
     },
+    { "src": "/favicon.ico", "dest": "/favicon.ico" },
     { "src": "/styles/(.*)", "dest": "/styles/$1" },
     { "src": "/scripts/(.*)", "dest": "/scripts/$1" },
     { "src": "/(.*)", "dest": "/api/index.php" }
