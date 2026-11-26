@@ -27,8 +27,7 @@ if (($_GET['error'] ?? '') === 'expired' || (($_GET['step'] ?? '') === '2fa' && 
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title>Авторизация — XWorsClient</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
     <link rel="stylesheet" href="/styles/index.css">
 </head>
 <body class="auth-page">
