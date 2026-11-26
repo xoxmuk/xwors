@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-/* Local dev: php -S localhost:8000 -t public router.php */
+/* Local dev: php -S localhost:8000 router.php */
 $env = __DIR__ . '/.env';
 if (is_file($env)) {
     foreach (file($env, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
@@ -10,5 +10,7 @@ if (is_file($env)) {
     }
 }
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
-if ($path !== '/' && is_file(__DIR__ . '/public' . $path)) return false;
+if (preg_match('#^/(styles|scripts)/[\w./-]+$#', $path) && !str_contains($path, '..') && is_file(__DIR__ . $path)) {
+    return false;
+}
 require __DIR__ . '/api/index.php';

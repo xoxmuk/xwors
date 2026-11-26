@@ -7,10 +7,10 @@ PHP 8+ / PostgreSQL. Публичные страницы: `/`, `/news`, `/prices
 api/index.php        единственная serverless-функция (front controller)
 lib/                 router, auth (cookie, CSRF, TOTP), actions (POST /api/*), connect (PostgreSQL)
 pages/               публичные страницы и админка
-public/styles        CSS (отдаётся Vercel как статика)
-public/scripts       app.js (кнопка «Копировать»)
+styles/              CSS (отдаётся Vercel как статика через @vercel/static)
+scripts/             app.js (кнопка «Копировать»)
 router.php           только для локального запуска
-vercel.json          runtime vercel-php + маршруты + заголовки безопасности
+vercel.json          vercel-php@0.7.1 + @vercel/static + маршруты + заголовки безопасности
 ```
 
 ## Переменные окружения
@@ -20,7 +20,7 @@ vercel.json          runtime vercel-php + маршруты + заголовки 
 ## Локальный запуск
 ```bash
 cp .env.example .env   # заполнить значения
-php -S localhost:8000 -t public router.php
+php -S localhost:8000 router.php
 ```
 
 ## Деплой на Vercel
