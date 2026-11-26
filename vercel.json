@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "index.php", "use": "vercel-php@0.7.1" },
+    { "src": "pages/**/*.php", "use": "vercel-php@0.7.1" },
+    { "src": "api/router.php", "use": "vercel-php@0.7.1" }
+  ],
+  "routes": [
+    { "src": "/styles/(.*)", "dest": "/styles/$1" },
+    { "src": "/api/(authorization|logout)(?:\\.php)?", "dest": "/api/router.php" },
+    { "src": "/admin/dashboard/users/?", "dest": "/pages/admin/dashboard/users.php" },
+    { "src": "/admin/dashboard/keys/?", "dest": "/pages/admin/dashboard/keys.php" },
+    { "src": "/admin/dashboard/?", "dest": "/pages/admin/dashboard/index.php" },
+    { "src": "/admin/?", "dest": "/pages/admin/index.php" },
+    { "src": "/news(?:\\.php)?/?", "dest": "/pages/news.php" },
+    { "src": "/prices(?:\\.php)?/?", "dest": "/pages/prices.php" },
+    { "src": "/", "dest": "/pages/index.php" }
+  ]
+}

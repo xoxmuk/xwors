@@ -1,0 +1,50 @@
+<?php
+declare(strict_types=1);
+require __DIR__.'/_layout.php';
+dash_start('security','Безопасность');
+$admin = admin_by_login($adminLogin);
+if (!$admin) { http_response_code(403); exit('Administrator not found'); }
+$twoFactor = is_array($admin['2fa'] ?? null) ? $admin['2fa'] : ['enabled' => 0, 'secret' => null];
+$enabled = !empty($twoFactor['enabled']);
+$secret = (string)($twoFactor['secret'] ?? '');
+$csrf = csrf_token();
+$account = rawurlencode($adminLogin);
+$issuer = rawurlencode('XWorsClient');
+$otpauth = $secret !== '' ? "otpauth://totp/{$issuer}:{$account}?secret={$secret}&issuer={$issuer}&algorithm=SHA1&digits=6&period=30" : '';
+?>
+<section class="panel-card security-card">
+    <h2>Двухэтапная авторизация</h2>
+    <p>Подключи Google Authenticator или совместимое приложение Aegis. После включения при каждом новом входе после пароля потребуется одноразовый шестизначный код.</p>
+    <div class="security-status"><span>Статус защиты</span><strong class="<?= $enabled?'security-on':'security-off' ?>"><?= $enabled?'Включена':'Не включена' ?></strong></div>
+    <?php if(isset($_GET['enabled'])): ?><p class="success-message">Двухэтапная авторизация успешно включена.</p><?php endif; ?>
+    <?php if(isset($_GET['disabled'])): ?><p class="success-message">Двухэтапная авторизация отключена.</p><?php endif; ?>
+    <?php if(isset($_GET['error'])): ?><p class="form-error">Код неверный или устарел. Проверь время на телефоне и попробуй снова.</p><?php endif; ?>
+
+    <?php if($enabled): ?>
+        <h3>Отключение 2FA</h3>
+        <p>Для отключения введи текущий код из приложения-аутентификатора.</p>
+        <form method="post" action="/api/disable-2fa" class="auth-form inline-auth-form">
+            <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+            <label for="disable-code">Текущий код</label><input id="disable-code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
+            <button type="submit" class="danger-button">Отключить 2FA</button>
+        </form>
+    <?php elseif($secret !== ''): ?>
+        <h3>Завершение настройки</h3>
+        <p>В Google Authenticator выбери добавление аккаунта по ключу настройки и введи данные ниже.</p>
+        <label class="secret-label" for="totp-secret">Секретный ключ</label>
+        <div class="secret-value"><code id="totp-secret"><?= e($secret) ?></code><button type="button" class="copy-secret" onclick="navigator.clipboard.writeText(document.getElementById('totp-secret').textContent)">Копировать</button></div>
+        <p class="hint">Тип ключа: на основе времени (TOTP), 6 цифр, период 30 секунд.</p>
+        <form method="post" action="/api/enable-2fa" class="auth-form inline-auth-form">
+            <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+            <label for="enable-code">Код из Google Authenticator</label><input id="enable-code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required>
+            <button type="submit">Подтвердить и включить 2FA</button>
+        </form>
+    <?php else: ?>
+        <form method="post" action="/api/setup-2fa" class="auth-form">
+            <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+            <button type="submit">Добавить Google Authenticator</button>
+        </form>
+    <?php endif; ?>
+</section>
+<section class="panel-card"><h3>Важно</h3><p>Сохрани секретный ключ в надёжном месте. Если потеряешь доступ к приложению и секретный ключ, восстановить вход без ручного сброса 2FA в базе данных не получится. Никому не передавай этот ключ.</p></section>
+<?php dash_end(); ?>
