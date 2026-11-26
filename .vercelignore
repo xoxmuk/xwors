@@ -1,7 +1,8 @@
-.env
-.env.*
-!.env.example
-.git
-node_modules
-router.php
-README.md
+/.env
+/.env.*
+!/.env.example
+/.git
+/.idea
+/node_modules
+/router.php
+/README.md
