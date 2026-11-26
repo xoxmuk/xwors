@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="95d5a405-b495-40fc-b55f-fc415862849a" name="Изменения" comment="0.1.0">
-      <change beforePath="$PROJECT_DIR$/pages/_layout.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/_layout.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pages/admin/dashboard/_layout.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/admin/dashboard/_layout.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pages/admin/index.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/admin/index.php" afterDir="false" />
+    <list default="true" id="95d5a405-b495-40fc-b55f-fc415862849a" name="Изменения" comment="0.1.1">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/index.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/index.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pages/news.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/news.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,6 +65,7 @@
     <MESSAGE value="0.0.8" />
     <MESSAGE value="0.0.9" />
     <MESSAGE value="0.1.0" />
-    <option name="LAST_COMMIT_MESSAGE" value="0.1.0" />
+    <MESSAGE value="0.1.1" />
+    <option name="LAST_COMMIT_MESSAGE" value="0.1.1" />
   </component>
 </project>
