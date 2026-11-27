@@ -229,8 +229,8 @@ dash_start('goods', 'Товары');
 
         <div class="field">
             <label for="good-description">Описание</label>
-            <textarea id="good-description" name="description" rows="4"><?= e($formDescription) ?></textarea>
-            <div class="field-tools"><button type="button" class="btn-secondary" data-insert-tooltip>+ Tooltip</button><span class="hint">Выделите текст и добавьте подсказку при наведении</span></div>
+            <textarea id="good-description" name="description" rows="6" placeholder="∘ Норекоил&#10;∘ ESP&#10;&lt;div class=&quot;devider left&quot; devider-text=&quot;Раздел&quot;&gt;&lt;/div&gt;&#10;∘ Текст&#10;&lt;a href=&quot;#&quot;&gt;Ссылка&lt;/a&gt;"><?= e($formDescription) ?></textarea>
+            <div class="field-tools"><button type="button" class="btn-secondary" data-insert-tooltip>+ Tooltip</button><span class="hint">Строка с «∘» — пункт списка. Поддерживаются HTML, devider, tooltip и ссылки &lt;a&gt;</span></div>
         </div>
 
         <div class="admin-actions">

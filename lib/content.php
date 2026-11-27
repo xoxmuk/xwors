@@ -388,3 +388,59 @@ function content_render_html(string $text): string
     foreach ($root->childNodes as $child) $out .= $doc->saveHTML($child);
     return $out;
 }
+
+/**
+ * Prepares a product description for content_render_html():
+ *  - consecutive lines starting with "∘" (or "◦") become one <ul> with <li> items;
+ *  - other plain-text lines become <p> blocks (so line breaks survive in HTML mode);
+ *  - lines that start with a tag (<div class="devider …">, <a>, <ul>…) are kept as authored;
+ *  - lines inside an unclosed block tag (multi-line <ul>…</ul>) are never touched.
+ * Inline HTML after the marker is supported: "∘ <p tooltip-text="…">Tooltip</p>".
+ */
+function content_description_blocks(string $text): string
+{
+    $text = trim(str_replace(["\r\n", "\r"], "\n", $text));
+    if ($text === '') return '';
+
+    $blockTags = 'ul|ol|li|div|p|blockquote|table|thead|tbody|tr|th|td|pre|h3|h4|h5|h6';
+    $out = [];
+    $items = [];
+    $depth = 0;
+    $flush = static function () use (&$out, &$items): void {
+        if ($items) $out[] = '<ul>' . implode('', $items) . '</ul>';
+        $items = [];
+    };
+
+    foreach (explode("\n", $text) as $line) {
+        $line = trim($line);
+        if ($line === '') { if ($depth === 0) $flush(); continue; }
+
+        $isItem = $depth === 0 && preg_match('/^[\x{2218}\x{25E6}]\s*(.*)$/su', $line, $m) === 1;
+        $content = $isItem ? trim($m[1]) : $line;
+        if ($isItem && $content === '') continue;
+
+        if ($isItem) {
+            $items[] = '<li>' . $content . '</li>';
+        } else {
+            if ($depth === 0) {
+                $flush();
+                $out[] = $line[0] === '<' ? $line : '<p>' . $line . '</p>';
+            } else {
+                $out[] = $line;
+            }
+        }
+
+        $opens = preg_match_all('#<(?:' . $blockTags . ')(?=[\s>/])[^>]*(?<!/)>#i', $content);
+        $closes = preg_match_all('#</(?:' . $blockTags . ')\s*>#i', $content);
+        $depth = max(0, $depth + (int)$opens - (int)$closes);
+    }
+    $flush();
+    return implode("\n", $out);
+}
+
+/** Renders a product description: ∘-lines → list items, then the same safe HTML as in news (devider, tooltip, links). */
+function content_render_description(string $text): string
+{
+    return content_render_html(content_description_blocks($text));
+}
+

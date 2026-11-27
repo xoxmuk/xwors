@@ -41,7 +41,7 @@ try {
                     <div class="label">Описание</div>
                     <div>
 <?php if ((string)$good['description'] !== ''): ?>
-                        <div class="product-description col"><?= content_render_html((string)$good['description']) ?></div>
+                        <div class="product-description col"><?= content_render_description((string)$good['description']) ?></div>
 <?php else: ?>
                         <p>Описание не указано.</p>
 <?php endif; ?>
