@@ -1,8 +1,0 @@
-/.env
-/.env.*
-!/.env.example
-/.git
-/.idea
-/node_modules
-/router.php
-/README.md

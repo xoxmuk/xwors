@@ -556,11 +556,6 @@ document.addEventListener('click', function (e) {
       var discount = Math.min(100, optionDiscount + productDiscount);
       var total = Number(selected.price) * (1 - discount / 100);
       row.querySelector('[data-total-price]').textContent = money(total);
-      var originalEl = row.querySelector('[data-original-price]');
-      if (originalEl) {
-        originalEl.textContent = money(Number(selected.price));
-        originalEl.hidden = discount <= 0;
-      }
       var discountEl = row.querySelector('[data-discount]');
       discountEl.hidden = discount <= 0;
       discountEl.textContent = '-' + discount + '%';

@@ -138,9 +138,9 @@ dash_start('goods', 'Товары');
         <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
         <input type="hidden" name="id" value="<?= (int)($editing['id'] ?? 0) ?>">
 
-        <div class="goods-identity">
         <div class="field">
             <span class="field-label">Иконка товара</span>
+            <button type="button" class="btn-secondary icon-type-toggle" data-icon-upload>Загрузить изображение</button>
             <div class="media-box single" data-uploader="single" data-folder="goods" data-max-bytes="2097152" data-csrf="<?= e($csrf) ?>">
                 <input type="hidden" name="image" value="<?= $formImage !== '' ? '__keep__' : '' ?>" data-value>
                 <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" hidden data-file>
@@ -159,14 +159,17 @@ dash_start('goods', 'Товары');
             <span class="upload-error" data-error hidden role="alert"></span>
         </div>
 
-        <div class="field goods-name-field">
-            <label for="good-name">Название</label>
-            <input id="good-name" name="name" value="<?= e($formName) ?>" maxlength="255" required>
-        </div>
-        </div>
-
-        <div class="form-grid goods-settings-grid">
-            <div class="field goods-prices-field">
+        <div class="form-grid">
+            <div class="field">
+                <label for="good-name">Название</label>
+                <input id="good-name" name="name" value="<?= e($formName) ?>" maxlength="255" required>
+            </div>
+            <div class="field">
+                <label for="good-discount">Общая скидка товара, %</label>
+                <input id="good-discount" name="discount" type="number" min="0" max="100" step="0.01" value="<?= e((string)$formDiscount) ?>" placeholder="0">
+                <p class="hint">Применяется ко всем вариантам цены дополнительно к индивидуальной скидке варианта. Скидки складываются, максимум — 100%.</p>
+            </div>
+            <div class="field">
                 <span class="field-label">Варианты цены</span>
                 <input type="hidden" name="prices" id="good-prices-json" value="<?= e(json_encode($formPrices, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>">
                 <button type="button" class="btn-secondary price-toggle" data-price-toggle aria-expanded="true">Свернуть список цен</button>
@@ -184,12 +187,6 @@ dash_start('goods', 'Товары');
                 </div>
                 <button type="button" class="btn-secondary" data-price-add>+ Добавить цену</button>
                 <p class="hint">Название (например, 1d), цена и скидка в процентах. Скидка рассчитывается от указанной цены.</p>
-            </div>
-            <div class="goods-right-fields">
-            <div class="field">
-                <label for="good-discount">Общая скидка товара, %</label>
-                <input id="good-discount" name="discount" type="number" min="0" max="100" step="0.01" value="<?= e((string)$formDiscount) ?>" placeholder="0">
-                <p class="hint">Применяется ко всем вариантам цены дополнительно к индивидуальной скидке варианта. Скидки складываются, максимум — 100%.</p>
             </div>
             <div class="field">
                 <label for="good-status">Статус</label>
@@ -226,7 +223,6 @@ dash_start('goods', 'Товары');
             <div class="field">
                 <span class="field-label">Видимость</span>
                 <label class="checkbox-row"><input type="checkbox" name="hidden" value="1"<?= $formHidden ? ' checked' : '' ?>> Скрыть товар <span class="info-tip tooltip" tabindex="0" tooltip-text="Скрытый товар не показывается на странице «Покупка». Позже можно опубликовать одним кликом в списке.">?</span></label>
-            </div>
             </div>
         </div>
 
