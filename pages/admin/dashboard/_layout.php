@@ -39,7 +39,7 @@ function dash_start(string $active, string $title): void
 </head>
 <body class="root admin-root">
 <aside class="sidebar col">
-    <section class="side-info col"><div class="brand"><span>XWorsClient</span></div><div class="label">УПРАВЛЕНИЕ</div></section>
+    <section class="side-info col"><div class="brand"><a href="/">XWorsClient</a></div><div class="label">УПРАВЛЕНИЕ</div></section>
     <nav class="side-items">
 <?php foreach ($links as $key => $item): ?>
         <a href="<?= $item[1] ?>" class="side<?= $active === $key ? ' active' : '' ?>"><?= e($item[0]) ?></a>

@@ -1,19 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="95d5a405-b495-40fc-b55f-fc415862849a" name="Изменения" comment="0.2.6">
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/actions.php" beforeDir="false" afterPath="$PROJECT_DIR$/lib/actions.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/connect.php" beforeDir="false" afterPath="$PROJECT_DIR$/lib/connect.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/router.php" beforeDir="false" afterPath="$PROJECT_DIR$/lib/router.php" afterDir="false" />
+    <list default="true" id="95d5a405-b495-40fc-b55f-fc415862849a" name="Изменения" comment="0.2.7">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pages/_layout.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/_layout.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pages/admin/dashboard/_layout.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/admin/dashboard/_layout.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pages/admin/dashboard/index.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/admin/dashboard/index.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pages/admin/dashboard/security.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/admin/dashboard/security.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pages/news.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/news.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pages/prices.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/prices.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/app.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/styles/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/styles/index.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,7 +55,6 @@
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="0.0.2" />
     <MESSAGE value="0.0.3" />
     <MESSAGE value="0.0.4" />
     <MESSAGE value="0.0.5" />
@@ -89,6 +79,7 @@
     <MESSAGE value="0.2.4" />
     <MESSAGE value="0.2.5" />
     <MESSAGE value="0.2.6" />
-    <option name="LAST_COMMIT_MESSAGE" value="0.2.6" />
+    <MESSAGE value="0.2.7" />
+    <option name="LAST_COMMIT_MESSAGE" value="0.2.7" />
   </component>
 </project>
