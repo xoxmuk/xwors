@@ -152,14 +152,30 @@ function content_store_upload(array $file, string $folder, int $maxBytes): array
     if ($hash === false) return $fail('hash', 'Не удалось обработать файл.');
 
     // На Vercel используем постоянное внешнее хранилище Vercel Blob.
-    $blobToken = trim((string)env_get('BLOB_READ_WRITE_TOKEN'));
+    // Поддерживаем пользовательский префикс переменных из Vercel Advanced Options.
+    $blobToken = trim((string)(env_get('PUBLIC_BLOB_READ_WRITE_TOKEN') ?: env_get('BLOB_READ_WRITE_TOKEN')));
+    $blobStoreId = trim((string)(env_get('PUBLIC_BLOB_STORE_ID') ?: env_get('BLOB_STORE_ID')));
     if ($blobToken !== '') {
         if (!function_exists('curl_init')) return $fail('blob_curl', 'Для загрузки в Vercel Blob на сервере требуется PHP cURL.');
+
+        // Read/Write token обычно уже содержит Store ID. Явная переменная
+        // PUBLIC_BLOB_STORE_ID имеет приоритет и поддерживает формат store_<id>.
+        if ($blobStoreId === '') {
+            $tokenParts = explode('_', $blobToken);
+            $blobStoreId = (string)($tokenParts[3] ?? '');
+        }
+        if (str_starts_with($blobStoreId, 'store_')) $blobStoreId = substr($blobStoreId, 6);
+        if ($blobStoreId === '') return $fail('blob_store_id', 'Не задан PUBLIC_BLOB_STORE_ID и не удалось определить ID из Read/Write Token.');
+
         $name = $hash . '.' . CONTENT_IMAGE_TYPES[$mime];
         $pathname = 'xwors/' . $folder . '/' . $name;
-        $blob = curl_init('https://blob.vercel-storage.com/' . $pathname);
+        // Совместимый с актуальным @vercel/blob API v13 server-side PUT.
+        $url = 'https://vercel.com/api/blob/?pathname=' . rawurlencode($pathname);
         $payload = file_get_contents($tmp);
         if ($payload === false) return $fail('read', 'Не удалось прочитать загружаемый файл.');
+
+        $requestId = $blobStoreId . ':' . (string)time() . ':' . bin2hex(random_bytes(6));
+        $blob = curl_init($url);
         curl_setopt_array($blob, [
             CURLOPT_CUSTOMREQUEST => 'PUT',
             CURLOPT_POSTFIELDS => $payload,
@@ -167,10 +183,15 @@ function content_store_upload(array $file, string $folder, int $maxBytes): array
             CURLOPT_TIMEOUT => 45,
             CURLOPT_HTTPHEADER => [
                 'Authorization: Bearer ' . $blobToken,
-                'x-api-version: 7',
+                'x-vercel-blob-store-id: ' . $blobStoreId,
+                'x-api-version: 13',
+                'x-api-blob-request-id: ' . $requestId,
+                'x-api-blob-request-attempt: 0',
+                'x-content-length: ' . strlen($payload),
+                'x-vercel-blob-access: public',
                 'x-content-type: ' . $mime,
                 'x-cache-control-max-age: 31536000',
-                'x-allow-overwrite: true',
+                'x-allow-overwrite: 1',
                 'Content-Length: ' . strlen($payload),
             ],
         ]);
@@ -180,14 +201,16 @@ function content_store_upload(array $file, string $folder, int $maxBytes): array
         curl_close($blob);
         $blobData = is_string($response) ? json_decode($response, true) : null;
         if ($httpCode < 200 || $httpCode >= 300 || !is_array($blobData) || empty($blobData['url'])) {
-            error_log('Vercel Blob upload failed: HTTP ' . $httpCode . ' ' . $curlError . ' ' . (is_string($response) ? substr($response, 0, 500) : ''));
-            return $fail('blob_upload', 'Не удалось сохранить изображение в Vercel Blob. Проверьте BLOB_READ_WRITE_TOKEN и настройки Blob Store.');
+            $apiMessage = is_array($blobData) ? (string)($blobData['error']['message'] ?? $blobData['message'] ?? '') : '';
+            error_log('Vercel Blob upload failed: HTTP ' . $httpCode . ' ' . $curlError . ' ' . (is_string($response) ? substr($response, 0, 1000) : ''));
+            $details = $apiMessage !== '' ? ' Ответ Vercel: ' . $apiMessage : ($curlError !== '' ? ' cURL: ' . $curlError : ' HTTP ' . $httpCode . '.');
+            return $fail('blob_upload', 'Не удалось сохранить изображение в Vercel Blob.' . $details);
         }
         return ['path' => (string)$blobData['url']];
     }
 
     $dir = content_assets_dir($folder);
-    if (content_storage_readonly($dir)) return $fail('readonly', 'Сервер работает в режиме «только чтение». Для Vercel добавьте BLOB_READ_WRITE_TOKEN (Vercel Blob) или укажите URL изображения.');
+    if (content_storage_readonly($dir)) return $fail('readonly', 'Сервер работает в режиме «только чтение». Для Vercel добавьте PUBLIC_BLOB_READ_WRITE_TOKEN (Vercel Blob) или укажите URL изображения.');
     if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) return $fail('mkdir', 'Не удалось создать папку assets/' . $folder . '. Проверьте права на запись.');
     if (!is_writable($dir)) return $fail('not_writable', 'Нет прав на запись в папку assets/' . $folder . '.');
 

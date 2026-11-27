@@ -56,7 +56,7 @@ try {
                             <span data-duration-value>1d</span>
                         </button>
                         <div class="duration-menu" role="listbox" aria-label="Срок действия подписки" data-duration-menu hidden>
-                            <?php foreach (['1d' => 1, '3d' => 3, '7d' => 7, '14d' => 14, '30d' => 30, '90d' => 90, 'Permanently' => 360] as $durationLabel => $days): ?>
+                            <?php foreach (['1d' => 1, '3d' => 3, '7d' => 7, '14d' => 14, '30d' => 30, '90d' => 90, 'Permanently' => 1095] as $durationLabel => $days): ?>
                                 <button type="button" role="option" aria-selected="<?= $days === 1 ? 'true' : 'false' ?>" data-days="<?= $days ?>" data-label="<?= e($durationLabel) ?>"><?= e($durationLabel) ?></button>
                             <?php endforeach; ?>
                         </div>

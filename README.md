@@ -4,7 +4,7 @@ PHP 8+ / PostgreSQL.
 
 ## Переменные окружения
 - `XWORS_DATABASE_URL` — PostgreSQL URL (`postgresql://user:pass@host:5432/db?sslmode=require`).
-- `BLOB_READ_WRITE_TOKEN` — токен Vercel Blob для постоянного хранения загружаемых изображений (создаётся в Storage → Blob → Connect Store).
+- `PUBLIC_BLOB_READ_WRITE_TOKEN` — Read/Write Token Vercel Blob; `PUBLIC_BLOB_STORE_ID` — ID хранилища. Оба читаются только PHP на сервере. `PUBLIC_BLOB_WEBHOOK_PUBLIC_KEY` нужен только при настройке проверки подписей webhook и не требуется для обычной загрузки.
 - `AUTH_SECRET` — минимум 32 случайных символа: `php -r 'echo bin2hex(random_bytes(32));'`
 
 ## Tooltip в HTML новостей
@@ -66,7 +66,7 @@ QR-код генерируется локально в браузере (`script
 В `/admin/dashboard/users` создаётся пользователь: случайный UUID v4 и случайный ключ из 32 символов (A-Z, a-z, 0-9); при совпадении с существующими генерация повторяется.
 
 ## Хранение картинок
-На VPS/локально файлы пишутся в `assets/news` и `assets/goods`. На Vercel при наличии `BLOB_READ_WRITE_TOKEN` приложение автоматически сохраняет картинки в Vercel Blob (путь `xwors/news` или `xwors/goods`), а в базе хранит постоянный публичный URL. Добавьте `BLOB_READ_WRITE_TOKEN` в Project → Settings → Environment Variables после подключения Blob Store. Если токен не задан, загрузка на Vercel вернёт понятную ошибку; вместо файла можно использовать HTTPS URL.
+На VPS/локально файлы пишутся в `assets/news` и `assets/goods`. На Vercel при наличии `PUBLIC_BLOB_READ_WRITE_TOKEN` (либо стандартного `BLOB_READ_WRITE_TOKEN`) приложение автоматически сохраняет картинки в Vercel Blob (путь `xwors/news` или `xwors/goods`), а в базе хранит постоянный публичный URL. Добавьте `PUBLIC_BLOB_READ_WRITE_TOKEN` и `PUBLIC_BLOB_STORE_ID` в Project → Settings → Environment Variables после подключения Public Blob Store. `PUBLIC_BLOB_WEBHOOK_PUBLIC_KEY` оставьте заданным только если используете Blob Webhooks. Если токен не задан, загрузка на Vercel вернёт понятную ошибку; вместо файла можно использовать HTTPS URL.
 
 ## Таблица news
 `id`, `version`, `data` (JSONB: `{ "blocks": [{ "title", "description" }], "images": [...] }`), `hidden`, `create_at`, `updated_at`.
