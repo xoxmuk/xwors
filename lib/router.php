@@ -29,6 +29,8 @@ function route_resolve(): ?string
         '/admin'                  => 'pages/admin/index.php',
         '/admin/dashboard'        => 'pages/admin/dashboard/index.php',
         '/admin/dashboard/users'  => 'pages/admin/dashboard/users.php',
+        '/admin/dashboard/news'   => 'pages/admin/dashboard/news.php',
+        '/admin/dashboard/goods'  => 'pages/admin/dashboard/goods.php',
         '/admin/dashboard/keys'   => 'pages/admin/dashboard/keys.php',
         '/admin/dashboard/security' => 'pages/admin/dashboard/security.php',
     ];

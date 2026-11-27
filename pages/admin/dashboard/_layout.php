@@ -19,6 +19,8 @@ function dash_start(string $active, string $title): void
     $links = [
         'index'    => ['Главная', '/admin/dashboard/'],
         'users'    => ['Список юзеров', '/admin/dashboard/users'],
+        'news'     => ['Новости', '/admin/dashboard/news'],
+        'goods'    => ['Товары', '/admin/dashboard/goods'],
         'keys'     => ['Ключи', '/admin/dashboard/keys'],
         'security' => ['Безопасность', '/admin/dashboard/security'],
     ];
@@ -32,6 +34,7 @@ function dash_start(string $active, string $title): void
     <title><?= e($title) ?> — XWorsClient Admin</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
     <link rel="stylesheet" href="/styles/index.css">
+    <script src="/scripts/qrcode.min.js" defer></script>
     <script src="/scripts/app.js" defer></script>
 </head>
 <body class="root admin-root">

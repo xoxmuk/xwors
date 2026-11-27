@@ -43,10 +43,16 @@ dash_start('security', 'Безопасность');
     </form>
 <?php elseif ($secret !== ''): ?>
     <h3>Завершение настройки</h3>
-    <p>В Google Authenticator выбери добавление аккаунта по ключу настройки и введи данные ниже.</p>
-    <label class="secret-label" for="totp-secret">Секретный ключ</label>
-    <div class="secret-value"><code id="totp-secret"><?= e($secret) ?></code><button type="button" class="copy-secret" data-copy="#totp-secret">Копировать</button></div>
-    <a href="<?= e($otpauth) ?>">Открыть в приложении</a>
+    <p>Отсканируй QR-код в Google Authenticator, Aegis или другом TOTP-приложении. Если камера недоступна, введи секретный ключ вручную.</p>
+    <div class="totp-setup">
+        <div id="totp-qr" class="totp-qr" data-qr="<?= e($otpauth) ?>" aria-label="QR-код для добавления в аутентификатор"></div>
+        <div class="totp-setup-info">
+            <label class="secret-label" for="totp-secret">Секретный ключ</label>
+            <div class="secret-value"><code id="totp-secret"><?= e($secret) ?></code><button type="button" class="copy-secret" data-copy="#totp-secret">Копировать</button></div>
+            <a href="<?= e($otpauth) ?>">Открыть в приложении</a>
+        </div>
+    </div>
+    <p class="hint">QR-код генерируется прямо в браузере, секретный ключ не отправляется на сторонние сервисы.</p>
     <form method="post" action="/api/enable-2fa" class="auth-form inline-auth-form">
         <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
         <label for="enable-code">Код из Google Authenticator</label>

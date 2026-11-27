@@ -31,10 +31,22 @@ INSERT INTO public.admins (login, password) VALUES ('$2y$...', '$2y$...');
 
 ## Google Authenticator / Aegis (TOTP)
 1. Войти в `/admin`, открыть Безопасность (`/admin/dashboard/security`).
-2. «Добавить Google Authenticator», ввести секрет в приложении, подтвердить 6-значным кодом.
+2. «Добавить Google Authenticator» → отсканировать QR-код или ввести секретный ключ вручную, подтвердить 6-значным кодом.
 3. Дальше вход: логин + пароль → код на втором шаге.
+
+QR-код генерируется локально в браузере (`scripts/qrcode.min.js`), секрет никуда не отправляется.
 
 Если доступ к аутентификатору потерян, сбросить `2fa` в БД: `UPDATE admins SET "2fa" = '{"enabled":0,"secret":null}'`.
 
 ## Таблица users
 `uuid`, `key`, `created_at`, `expires_at` (NULL — бессрочный ключ).
+
+## Таблица news
+`id`, `version`, `data` (JSONB: `{ "blocks": [{ "title", "description" }], "images": [...] }`), `hidden`, `create_at`, `updated_at`.
+
+Новости создаются и редактируются в `/admin/dashboard/news`. Картинки можно загрузить файлом (хранятся как data URL в JSONB) или добавить ссылками. Скрытые новости не выводятся на `/news`.
+
+## Таблица goods
+`id`, `status`, `image`, `name`, `description`, `price`, `hidden`, `create_at`, `updated_at`.
+
+Товары создаются и редактируются в `/admin/dashboard/goods`. Статус меняется одним нажатием на бейдж в списке, скрытые товары не выводятся на `/prices`.

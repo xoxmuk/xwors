@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/../lib/auth.php';
 
 function public_start(string $active, string $title): void {
     $items = ['index' => ['Главная', '/'], 'news' => ['Новости', '/news'], 'prices' => ['Покупка', '/prices']];
@@ -13,6 +14,7 @@ function public_start(string $active, string $title): void {
     <title><?= $t ?> — XWorsClient</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
     <link rel="stylesheet" href="/styles/index.css">
+    <script src="/scripts/app.js" defer></script>
 </head>
 <body class="root">
 <aside class="sidebar col">
@@ -24,7 +26,7 @@ function public_start(string $active, string $title): void {
     </nav>
     <section class="sidebar-bottom center col">
         <span>&copy; <?= date('Y') ?> XWorsClient</span>
-        <span>Site designed by <a class="tooltip" href="https://t.me/ialonet" data-tooltip="In no way involved in the administration or management of the site.">@ialonet</a></span>
+        <span class="sidebar-designer">Site designed by <a class="tooltip" href="https://t.me/ialonet" data-tooltip="In no way involved in the administration or management of the site.">@ialonet</a></span>
     </section>
 </aside>
 <main class="main">
