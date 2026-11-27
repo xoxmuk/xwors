@@ -188,10 +188,10 @@ function handle_action(string $action): void
                 if (!$prices) redirect('/admin/dashboard/goods?error=price');
                 $pricesJson = json_encode($prices, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
                 if ($id > 0) { $stmt = db()->prepare('SELECT image FROM goods WHERE id = :id'); $stmt->execute([':id' => $id]); $existing = $stmt->fetchColumn(); if ($existing === false) redirect('/admin/dashboard/goods?error=notfound'); $oldImage = (string)$existing; }
-                // image: '__keep__' keeps the stored value, '' removes it, otherwise a hashed /assets/goods path or an http(s) URL
+                // image: '__keep__' keeps the stored value, '' removes it, otherwise only an uploaded local /assets/goods path is accepted
                 $imageInput = trim((string)($_POST['image'] ?? '__keep__'));
                 if ($imageInput === '__keep__') $image = $oldImage;
-                elseif ($imageInput !== '' && (content_local_image($imageInput) ? str_starts_with($imageInput, '/assets/goods/') : true) && content_valid_image($imageInput)) $image = $imageInput;
+                elseif ($imageInput !== '' && content_local_image($imageInput) && str_starts_with($imageInput, '/assets/goods/') && content_valid_image($imageInput)) $image = $imageInput;
                 if ($name === '') redirect('/admin/dashboard/goods?error=name');
                 $buy = goods_buy_resolve((string)($_POST['buy_type'] ?? 'none'), (string)($_POST['buy_value'] ?? ''), (string)($_POST['buy_page'] ?? ''));
                 if (isset($buy['error'])) redirect('/admin/dashboard/goods?' . ($id > 0 ? 'edit=' . $id . '&' : 'new=1&') . 'error=buy&msg=' . rawurlencode($buy['error']));

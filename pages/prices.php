@@ -51,7 +51,10 @@ try {
                 <div class="product-price-row" data-product-discount="<?= e((string)$productDiscount) ?>" data-price-options="<?= e(json_encode($priceOptions, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>">
                     <div class="product-price-stack">
                         <span class="product-discount" data-discount<?= $totalDiscount > 0 ? '' : ' hidden' ?>>-<?= e((string)$totalDiscount) ?>%</span>
-                        <span class="product-price" data-total-price><?= e(content_price((float)$firstPrice['price'] * (1 - $totalDiscount / 100))) ?></span>
+                        <div class="product-price-main">
+                            <span class="product-price" data-total-price><?= e(content_price((float)$firstPrice['price'] * (1 - $totalDiscount / 100))) ?></span>
+                            <span class="product-old-price" data-original-price<?= $totalDiscount > 0 ? '' : ' hidden' ?>><?= e(content_price((float)$firstPrice['price'])) ?></span>
+                        </div>
                     </div>
                     <span class="product-price-separator">/</span>
                     <div class="duration-picker">
