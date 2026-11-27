@@ -30,12 +30,12 @@ try {
 <?php foreach ($goods as $good): ?>
 <?php $meta = goods_status_meta((string)$good['status']); ?>
             <article class="card col product">
-                <div>
+                <div class="product-visual">
                     <img src="<?= e((string)$good['image'] !== '' ? (string)$good['image'] : '/assets/goods/default_64.png') ?>" alt="<?= e((string)$good['name']) ?>" loading="lazy">
-                    <div class="product-head">
-                        <h2><?= e((string)$good['name']) ?></h2>
-                        <span class="status" data-color="<?= e($meta['color']) ?>"><i></i> <?= e($meta['label']) ?></span>
-                    </div>
+                    <span class="status product-status" data-color="<?= e($meta['color']) ?>"><i></i> <?= e($meta['label']) ?></span>
+                </div>
+                <div class="product-heading">
+                    <h2><?= e((string)$good['name']) ?></h2>
                 </div>
                 <div>
                     <div class="label">Описание</div>
