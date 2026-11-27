@@ -72,14 +72,13 @@ dash_start('goods', 'Товары');
 <?php if (!$goods): ?>
     <p class="empty-state">Товаров пока нет. Добавьте первый товар.</p>
 <?php else: ?>
-    <div class="table-scroll">
+    <div class="table-scroll table-fit">
         <table class="users-table goods-table">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>Фото</th>
                     <th>Название</th>
-                    <th>Цена</th>
                     <th>Статус</th>
                     <th>Видимость</th>
                     <th>Дата</th>
@@ -95,15 +94,14 @@ dash_start('goods', 'Товары');
                         <img class="table-thumb" src="<?= e((string)$item['image'] !== '' ? (string)$item['image'] : '/assets/goods/default_64.png') ?>" alt="">
                     </td>
                     <td><?= e((string)$item['name']) ?: '—' ?></td>
-                    <td><?= e(implode(', ', array_map(fn($p) => $p['name'] . ': ' . content_price($p['price']), goods_prices((string)$item['prices']))) ) ?></td>
                     <td>
-                        <button class="status status-button tooltip" tooltip-position="right" tooltip-text="Нажмите, чтобы выбрать другой статус" type="button" data-status-menu data-id="<?= (int)$item['id'] ?>" data-current="<?= e((string)$item['status']) ?>" data-color="<?= e($meta['color']) ?>" aria-haspopup="menu" aria-expanded="false"><i></i> <?= e($meta['label']) ?></button>
+                        <button class="status status-button tooltip" tooltip-position="up" tooltip-text="Нажмите, чтобы выбрать другой статус" type="button" data-status-menu data-id="<?= (int)$item['id'] ?>" data-current="<?= e((string)$item['status']) ?>" data-color="<?= e($meta['color']) ?>" aria-haspopup="menu" aria-expanded="false"><i></i> <?= e($meta['label']) ?></button>
                     </td>
                     <td>
                         <form method="post" action="/api/toggle-good" class="inline-form">
                             <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
                             <input type="hidden" name="id" value="<?= (int)$item['id'] ?>">
-                            <button class="badge badge-button tooltip <?= $item['hidden'] ? 'badge-muted' : 'badge-success' ?>" tooltip-position="right" type="submit" tooltip-text="<?= $item['hidden'] ? 'Товар скрыт. Нажмите, чтобы опубликовать' : 'Товар виден посетителям. Нажмите, чтобы скрыть' ?>"><?= $item['hidden'] ? 'Скрыт' : 'Опубликован' ?></button>
+                            <button class="badge badge-button tooltip <?= $item['hidden'] ? 'badge-muted' : 'badge-success' ?>" tooltip-position="up" type="submit" tooltip-text="<?= $item['hidden'] ? 'Товар скрыт. Нажмите, чтобы опубликовать' : 'Товар виден посетителям. Нажмите, чтобы скрыть' ?>"><?= $item['hidden'] ? 'Скрыт' : 'Опубликован' ?></button>
                         </form>
                     </td>
                     <td><?= e(admin_goods_date($item['create_at'])) ?></td>
@@ -169,7 +167,6 @@ dash_start('goods', 'Товары');
             <div class="field goods-prices-field">
                 <span class="field-label">Варианты цены <span class="info-tip tooltip" tabindex="0" role="note" tooltip-text="Название (например, 1d), цена и скидка в процентах. Скидка рассчитывается от указанной цены.">?</span></span>
                 <input type="hidden" name="prices" id="good-prices-json" value="<?= e(json_encode($formPrices, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>">
-                <button type="button" class="btn-secondary price-toggle" data-price-toggle aria-expanded="true">Свернуть список цен</button>
                 <div class="price-editor-scroll" data-price-scroll>
                 <div class="price-editor" data-price-editor>
 <?php foreach ($formPrices as $priceIndex => $priceItem): ?>

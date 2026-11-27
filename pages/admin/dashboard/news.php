@@ -60,7 +60,7 @@ dash_start('news', 'Новости');
 <?php if (!$news): ?>
     <p class="empty-state">Новостей пока нет. Добавьте первую публикацию.</p>
 <?php else: ?>
-    <div class="table-scroll">
+    <div class="table-scroll table-fit">
         <table class="users-table">
             <thead>
                 <tr>
@@ -83,7 +83,7 @@ dash_start('news', 'Новости');
                         <form method="post" action="/api/toggle-news" class="inline-form">
                             <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
                             <input type="hidden" name="id" value="<?= (int)$item['id'] ?>">
-                            <button class="badge badge-button tooltip <?= $item['hidden'] ? 'badge-muted' : 'badge-success' ?>" tooltip-position="right" type="submit" tooltip-text="<?= $item['hidden'] ? 'Новость скрыта. Нажмите, чтобы опубликовать' : 'Новость видна посетителям. Нажмите, чтобы скрыть' ?>"><?= $item['hidden'] ? 'Скрыт' : 'Опубликован' ?></button>
+                            <button class="badge badge-button tooltip <?= $item['hidden'] ? 'badge-muted' : 'badge-success' ?>" tooltip-position="up" type="submit" tooltip-text="<?= $item['hidden'] ? 'Новость скрыта. Нажмите, чтобы опубликовать' : 'Новость видна посетителям. Нажмите, чтобы скрыть' ?>"><?= $item['hidden'] ? 'Скрыт' : 'Опубликован' ?></button>
                         </form>
                     </td>
                     <td class="actions-cell">
