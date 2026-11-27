@@ -50,16 +50,15 @@ try {
                 <?php $priceOptions = goods_prices((string)$good['prices']); $firstPrice = $priceOptions[0]; $productDiscount = (float)($good['discount'] ?? 0); $totalDiscount = min(100, (float)$firstPrice['discount'] + $productDiscount); ?>
                 <div class="product-price-row" data-product-discount="<?= e((string)$productDiscount) ?>" data-price-options="<?= e(json_encode($priceOptions, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>">
                     <div class="product-price-stack">
-                        <span class="product-discount" data-discount<?= $totalDiscount > 0 ? '' : ' hidden' ?>>-<?= e((string)$totalDiscount) ?>%</span>
                         <div class="product-price-main">
                             <span class="product-price" data-total-price><?= e(content_price((float)$firstPrice['price'] * (1 - $totalDiscount / 100))) ?></span>
                             <span class="product-old-price" data-original-price<?= $totalDiscount > 0 ? '' : ' hidden' ?>><?= e(content_price((float)$firstPrice['price'])) ?></span>
+                            <span class="product-discount" data-discount<?= $totalDiscount > 0 ? '' : ' hidden' ?>>-<?= e((string)$totalDiscount) ?>%</span>
                         </div>
                     </div>
-                    <span class="product-price-separator">/</span>
                     <div class="duration-picker">
                         <button class="duration-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" data-duration-trigger>
-                            <span data-duration-value>1d</span>
+                            <span data-duration-value><?= e((string)$firstPrice['name']) ?></span>
                         </button>
                         <div class="duration-menu" role="listbox" aria-label="Срок действия подписки" data-duration-menu hidden>
                             <?php foreach ($priceOptions as $priceIndex => $priceOption): ?>

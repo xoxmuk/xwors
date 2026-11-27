@@ -167,7 +167,7 @@ dash_start('goods', 'Товары');
 
         <div class="form-grid goods-settings-grid">
             <div class="field goods-prices-field">
-                <span class="field-label">Варианты цены</span>
+                <span class="field-label">Варианты цены <span class="info-tip tooltip" tabindex="0" role="note" tooltip-text="Название (например, 1d), цена и скидка в процентах. Скидка рассчитывается от указанной цены.">?</span></span>
                 <input type="hidden" name="prices" id="good-prices-json" value="<?= e(json_encode($formPrices, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>">
                 <button type="button" class="btn-secondary price-toggle" data-price-toggle aria-expanded="true">Свернуть список цен</button>
                 <div class="price-editor-scroll" data-price-scroll>
@@ -183,13 +183,11 @@ dash_start('goods', 'Товары');
                 </div>
                 </div>
                 <button type="button" class="btn-secondary" data-price-add>+ Добавить цену</button>
-                <p class="hint">Название (например, 1d), цена и скидка в процентах. Скидка рассчитывается от указанной цены.</p>
             </div>
             <div class="goods-right-fields">
             <div class="field">
-                <label for="good-discount">Общая скидка товара, %</label>
+                <label for="good-discount">Общая скидка товара, % <span class="info-tip tooltip" tabindex="0" role="note" tooltip-text="Применяется ко всем вариантам цены дополнительно к индивидуальной скидке варианта. Скидки складываются, максимум — 100%.">?</span></label>
                 <input id="good-discount" name="discount" type="number" min="0" max="100" step="0.01" value="<?= e((string)$formDiscount) ?>" placeholder="0">
-                <p class="hint">Применяется ко всем вариантам цены дополнительно к индивидуальной скидке варианта. Скидки складываются, максимум — 100%.</p>
             </div>
             <div class="field">
                 <label for="good-status">Статус</label>
