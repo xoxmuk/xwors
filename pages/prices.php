@@ -4,8 +4,7 @@ public_start('prices', 'Покупка');
 ?>
 <section class="content">
     <div class="card">
-        <h1>Покупка</h1>
-        <p>Информация о тарифах и способах приобретения доступа появится здесь.</p>
+        <p>Здесь вы можете приобрести подписку на XWors Client.</p>
     </div>
     <div>
         <h1 class="center">Доступные товары</h1>
@@ -23,7 +22,7 @@ public_start('prices', 'Покупка');
                         <p class="tooltip" data-tooltip="Interactive Information">Interactive Information</p>
                     </div>
                 </div>
-                <a class="btn" href="#">Buy</a>
+                <a class="btn" href="#">Buy <span>(1 month)</span></a>
             </div>
 
             <div class="card col product">

@@ -46,7 +46,7 @@ dash_start('security', 'Безопасность');
     <p>В Google Authenticator выбери добавление аккаунта по ключу настройки и введи данные ниже.</p>
     <label class="secret-label" for="totp-secret">Секретный ключ</label>
     <div class="secret-value"><code id="totp-secret"><?= e($secret) ?></code><button type="button" class="copy-secret" data-copy="#totp-secret">Копировать</button></div>
-    <p class="hint">Тип ключа: на основе времени (TOTP), 6 цифр, период 30 секунд. <a href="<?= e($otpauth) ?>">Открыть в приложении</a></p>
+    <a href="<?= e($otpauth) ?>">Открыть в приложении</a>
     <form method="post" action="/api/enable-2fa" class="auth-form inline-auth-form">
         <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
         <label for="enable-code">Код из Google Authenticator</label>
@@ -60,5 +60,5 @@ dash_start('security', 'Безопасность');
     </form>
 <?php endif; ?>
 </section>
-<section class="panel-card"><h3>Важно</h3><p>Сохрани секретный ключ в надёжном месте. Если потеряешь доступ к приложению и секретный ключ, восстановить вход без ручного сброса 2FA в базе данных не получится. Никому не передавай этот ключ.</p></section>
+<section class="panel-card"><h3>Важно</h3><p>Сохрани секретный ключ в надёжном месте. Если потеряешь доступ к приложению или секретному ключу, снеси 2FA через БД.</p></section>
 <?php dash_end(); ?>
