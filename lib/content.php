@@ -29,6 +29,49 @@ function goods_statuses(): array
 }
 function goods_status_meta(?string $status): array { $all = goods_statuses(); return $all[(string)$status] ?? $all['undetected']; }
 function goods_next_status(?string $status): string { $keys = array_keys(goods_statuses()); $index = array_search((string)$status, $keys, true); return $keys[$index === false ? 0 : ($index + 1) % count($keys)]; }
+function goods_buy_types(): array
+{
+    return [
+        'none' => 'Не активна',
+        'telegram' => 'Telegram',
+        'link' => 'Внешняя ссылка',
+        'page' => 'Страница сайта',
+    ];
+}
+/** Decodes goods.purchase (JSONB {"type","url"}) into a safe ['type','url'] pair. */
+function goods_purchase(?string $json): array
+{
+    $d = json_decode((string)$json, true);
+    $type = is_array($d) ? (string)($d['type'] ?? 'none') : 'none';
+    $url = is_array($d) ? trim((string)($d['url'] ?? '')) : '';
+    if (!isset(goods_buy_types()[$type]) || ($type !== 'none' && $url === '')) return ['type' => 'none', 'url' => ''];
+    return ['type' => $type, 'url' => $url];
+}
+function goods_buy_pages(): array { return ['/' => 'Главная', '/news' => 'Новости']; }
+
+/** Validates the «Купить» target. Returns ['type' => ..., 'url' => ...] or ['error' => message]. */
+function goods_buy_resolve(string $type, string $value, string $page): array
+{
+    $value = trim($value);
+    switch ($type) {
+        case 'none': return ['type' => 'none', 'url' => ''];
+        case 'telegram':
+            if ($value === '') return ['error' => 'Укажите Telegram: @username или ссылку t.me/…'];
+            if (preg_match('#^(?:https?://)?(?:t(?:elegram)?\.me/)?@?([A-Za-z][A-Za-z0-9_]{4,31})/?$#i', $value, $m)) return ['type' => 'telegram', 'url' => 'https://t.me/' . $m[1]];
+            if (preg_match('#^https?://t\.me/\+[A-Za-z0-9_-]+$#i', $value) || preg_match('#^https?://t\.me/joinchat/[A-Za-z0-9_-]+$#i', $value)) return ['type' => 'telegram', 'url' => $value];
+            return ['error' => 'Некорректный Telegram: нужен @username (5–32 символа: латиница, цифры, _) или ссылка t.me/…'];
+        case 'link':
+            if ($value === '') return ['error' => 'Укажите ссылку для кнопки «Купить».'];
+            if (!preg_match('#^https?://#i', $value)) $value = 'https://' . $value;
+            if (filter_var($value, FILTER_VALIDATE_URL) === false || strlen($value) > 500) return ['error' => 'Некорректная ссылка. Пример: https://example.com/buy'];
+            return ['type' => 'link', 'url' => $value];
+        case 'page':
+            if (!isset(goods_buy_pages()[$page])) return ['error' => 'Выберите страницу сайта из списка.'];
+            return ['type' => 'page', 'url' => $page];
+    }
+    return ['error' => 'Неизвестный способ покупки.'];
+}
+
 function content_price(float|int|string $value): string { $number = (float)$value; if ($number <= 0) return 'Цена по запросу'; $decimals = fmod($number, 1.0) === 0.0 ? 0 : 2; return number_format($number, $decimals, ',', ' ') . ' ₽'; }
 const CONTENT_IMAGE_FOLDERS = ['news', 'goods'];
 const CONTENT_IMAGE_TYPES = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp', 'image/avif' => 'avif'];
@@ -48,29 +91,76 @@ function content_valid_image(string $value): bool
     return in_array($scheme, ['http', 'https'], true) && filter_var($value, FILTER_VALIDATE_URL) !== false;
 }
 
+const CONTENT_MAX_PIXELS = 8000;
+
+function content_ini_bytes(string $name): int
+{
+    $value = trim((string)ini_get($name));
+    if ($value === '') return 0;
+    $number = (float)$value;
+    return (int)match (strtolower(substr($value, -1))) { 'g' => $number * 1073741824, 'm' => $number * 1048576, 'k' => $number * 1024, default => $number };
+}
+
+function content_format_mb(int $bytes): string { return rtrim(rtrim(number_format($bytes / 1048576, 1, ',', ''), '0'), ',') . ' МБ'; }
+
+/** True when the app cannot write to its own folder (Vercel and other read-only hosts). */
+function content_storage_readonly(string $dir): bool
+{
+    if (env_get('VERCEL') !== null || env_get('AWS_LAMBDA_FUNCTION_NAME') !== null) return true;
+    return is_dir($dir) ? !is_writable($dir) : !is_writable(dirname($dir));
+}
+
 /**
  * Validates an uploaded image, hashes its content (SHA-256) and stores it as assets/<folder>/<hash>.<ext>.
- * Returns ['path' => '/assets/<folder>/<hash>.<ext>'] or ['error' => '<message>'].
+ * Returns ['path' => '/assets/<folder>/<hash>.<ext>'] or ['error' => '<message>', 'code' => '<code>'].
  */
 function content_store_upload(array $file, string $folder, int $maxBytes): array
 {
-    if (!in_array($folder, CONTENT_IMAGE_FOLDERS, true)) return ['error' => 'Неизвестная папка для загрузки.'];
+    $fail = static fn(string $code, string $message): array => ['error' => $message, 'code' => $code];
+    if (!in_array($folder, CONTENT_IMAGE_FOLDERS, true)) return $fail('folder', 'Неизвестная папка для загрузки.');
+
     $code = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
-    if ($code === UPLOAD_ERR_INI_SIZE || $code === UPLOAD_ERR_FORM_SIZE) return ['error' => 'Файл слишком большой.'];
-    if ($code !== UPLOAD_ERR_OK) return ['error' => 'Не удалось получить файл.'];
+    switch ($code) {
+        case UPLOAD_ERR_OK: break;
+        case UPLOAD_ERR_INI_SIZE:
+        case UPLOAD_ERR_FORM_SIZE: return $fail('server_limit', 'Файл больше лимита сервера (' . (ini_get('upload_max_filesize') ?: '—') . ').');
+        case UPLOAD_ERR_PARTIAL: return $fail('partial', 'Файл загружен не полностью. Проверьте соединение и повторите попытку.');
+        case UPLOAD_ERR_NO_FILE: return $fail('no_file', 'Файл не выбран или не дошёл до сервера.');
+        case UPLOAD_ERR_NO_TMP_DIR: return $fail('no_tmp', 'На сервере нет временной папки для загрузок. Обратитесь к администратору хостинга.');
+        case UPLOAD_ERR_CANT_WRITE: return $fail('tmp_write', 'Сервер не смог записать файл на диск. Возможно, закончилось место.');
+        case UPLOAD_ERR_EXTENSION: return $fail('php_ext', 'Загрузка остановлена расширением PHP на сервере.');
+        default: return $fail('unknown', 'Не удалось получить файл (код ' . $code . ').');
+    }
+
     $tmp = (string)($file['tmp_name'] ?? '');
-    if (!is_uploaded_file($tmp)) return ['error' => 'Не удалось получить файл.'];
-    if ((int)($file['size'] ?? 0) > $maxBytes) return ['error' => 'Файл больше ' . round($maxBytes / 1048576, 1) . ' МБ.'];
+    if ($tmp === '' || !is_uploaded_file($tmp)) return $fail('not_uploaded', 'Не удалось получить файл.');
+    $size = (int)($file['size'] ?? 0);
+    if ($size <= 0) return $fail('empty', 'Файл пустой (0 байт).');
+    if ($size > $maxBytes) return $fail('too_big', 'Файл весит ' . content_format_mb($size) . ', допустимо не больше ' . content_format_mb($maxBytes) . '.');
+
     $info = @getimagesize($tmp);
+    if ($info === false) return $fail('not_image', 'Файл повреждён или не является изображением.');
     $mime = strtolower((string)($info['mime'] ?? ''));
-    if (!isset(CONTENT_IMAGE_TYPES[$mime])) return ['error' => 'Допустимы PNG, JPG, WEBP, GIF и AVIF.'];
+    if (!isset(CONTENT_IMAGE_TYPES[$mime])) return $fail('bad_type', 'Формат «' . ($mime !== '' ? $mime : 'неизвестный') . '» не поддерживается. Допустимы PNG, JPG, WEBP, GIF и AVIF.');
+    if ((int)$info[0] < 1 || (int)$info[1] < 1) return $fail('bad_size', 'Не удалось определить размер изображения.');
+    if ((int)$info[0] > CONTENT_MAX_PIXELS || (int)$info[1] > CONTENT_MAX_PIXELS) return $fail('too_large_px', 'Разрешение ' . (int)$info[0] . '×' . (int)$info[1] . ' слишком большое, максимум ' . CONTENT_MAX_PIXELS . '×' . CONTENT_MAX_PIXELS . '.');
+
     $hash = hash_file('sha256', $tmp);
-    if ($hash === false) return ['error' => 'Не удалось обработать файл.'];
+    if ($hash === false) return $fail('hash', 'Не удалось обработать файл.');
+
     $dir = content_assets_dir($folder);
-    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) return ['error' => 'Папка assets/' . $folder . ' недоступна для записи.'];
+    if (content_storage_readonly($dir)) return $fail('readonly', 'Сервер работает в режиме «только чтение» (например, Vercel), сохранить файл нельзя. Укажите ссылку на картинку или подключите внешнее хранилище.');
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) return $fail('mkdir', 'Не удалось создать папку assets/' . $folder . '. Проверьте права на запись.');
+    if (!is_writable($dir)) return $fail('not_writable', 'Нет прав на запись в папку assets/' . $folder . '.');
+
     $name = $hash . '.' . CONTENT_IMAGE_TYPES[$mime];
     $target = $dir . '/' . $name;
-    if (!is_file($target) && !@move_uploaded_file($tmp, $target)) return ['error' => 'Не удалось сохранить файл на сервере.'];
+    if (!is_file($target)) {
+        $free = @disk_free_space($dir);
+        if ($free !== false && $free < $size + 1048576) return $fail('disk_full', 'На сервере закончилось свободное место.');
+        if (!@move_uploaded_file($tmp, $target)) return $fail('move', 'Не удалось сохранить файл на сервере. Проверьте права на запись в assets/' . $folder . '.');
+    }
+    if (!is_file($target) || (int)@filesize($target) <= 0) return $fail('verify', 'Файл сохранён с ошибкой. Повторите загрузку.');
     @chmod($target, 0644);
     return ['path' => '/assets/' . $folder . '/' . $name];
 }

@@ -51,13 +51,14 @@ function schema_definition(): array
             ],
         ],
         'goods' => [
-            'CREATE TABLE IF NOT EXISTS goods (id SERIAL PRIMARY KEY, status TEXT NOT NULL DEFAULT \'undetected\', image TEXT NOT NULL DEFAULT \'\', name TEXT NOT NULL DEFAULT \'\', description TEXT NOT NULL DEFAULT \'\', price NUMERIC(12,2) NOT NULL DEFAULT 0, hidden BOOLEAN NOT NULL DEFAULT FALSE, create_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())',
+            'CREATE TABLE IF NOT EXISTS goods (id SERIAL PRIMARY KEY, status TEXT NOT NULL DEFAULT \'undetected\', image TEXT NOT NULL DEFAULT \'\', name TEXT NOT NULL DEFAULT \'\', description TEXT NOT NULL DEFAULT \'\', price NUMERIC(12,2) NOT NULL DEFAULT 0, purchase JSONB NOT NULL DEFAULT \'{"type":"none","url":""}\'::jsonb, hidden BOOLEAN NOT NULL DEFAULT FALSE, create_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())',
             [
                 'status' => 'TEXT NOT NULL DEFAULT \'undetected\'',
                 'image' => 'TEXT NOT NULL DEFAULT \'\'',
                 'name' => 'TEXT NOT NULL DEFAULT \'\'',
                 'description' => 'TEXT NOT NULL DEFAULT \'\'',
                 'price' => 'NUMERIC(12,2) NOT NULL DEFAULT 0',
+                'purchase' => 'JSONB NOT NULL DEFAULT \'{"type":"none","url":""}\'::jsonb',
                 'hidden' => 'BOOLEAN NOT NULL DEFAULT FALSE',
                 'create_at' => 'TIMESTAMPTZ NOT NULL DEFAULT NOW()',
                 'updated_at' => 'TIMESTAMPTZ NOT NULL DEFAULT NOW()',

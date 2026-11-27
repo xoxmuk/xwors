@@ -64,6 +64,28 @@ document.addEventListener('submit', function (e) {
 (function () {
   var ALLOWED = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/avif'];
 
+  function httpError(status, notJson) {
+    if (status === 413) return 'Файл слишком большой для сервера (413).';
+    if (status === 401 || status === 403) return 'Нет доступа или сессия истекла. Обновите страницу и войдите снова.';
+    if (status === 404) return 'Обработчик загрузки не найден (404).';
+    if (status === 429) return 'Слишком много запросов. Подождите немного и повторите.';
+    if (status >= 500) return 'Сервер временно недоступен (' + status + '). Попробуйте позже.';
+    if (status >= 200 && status < 300 && notJson) return 'Сервер вернул неожиданный ответ. Файл мог не сохраниться.';
+    return 'Ошибка загрузки (' + status + ').';
+  }
+
+  // Проверяем, что браузер вообще может прочитать файл как картинку (битые файлы отсекаем до отправки)
+  function verifyImage(file) {
+    return new Promise(function (resolve) {
+      if (file.type === 'image/avif' || !window.URL || !URL.createObjectURL) { resolve(true); return; }
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () { URL.revokeObjectURL(url); resolve(img.naturalWidth > 0 && img.naturalHeight > 0); };
+      img.onerror = function () { URL.revokeObjectURL(url); resolve(false); };
+      img.src = url;
+    });
+  }
+
   function sendFile(box, file, onProgress) {
     var xhr = new XMLHttpRequest();
     var promise = new Promise(function (resolve, reject) {
@@ -76,13 +98,16 @@ document.addEventListener('submit', function (e) {
       xhr.upload.onprogress = function (e) {
         if (e.lengthComputable) onProgress(Math.min(99, (e.loaded / e.total) * 100));
       };
+      xhr.timeout = 60000;
       xhr.onload = function () {
         var res = null;
         try { res = JSON.parse(xhr.responseText); } catch (err) {}
         if (res && res.ok) { onProgress(100); resolve(res.path); }
-        else reject(new Error((res && res.error) || 'Ошибка загрузки (' + xhr.status + ').'));
+        else if (res && res.error) reject(new Error(res.error));
+        else reject(new Error(httpError(xhr.status, !res)));
       };
-      xhr.onerror = function () { reject(new Error('Нет соединения с сервером.')); };
+      xhr.onerror = function () { reject(new Error('Нет соединения с сервером. Проверьте интернет и повторите попытку.')); };
+      xhr.ontimeout = function () { reject(new Error('Сервер слишком долго отвечает (более 60 секунд). Попробуйте файл поменьше.')); };
       xhr.onabort = function () { reject(new Error('abort')); };
       xhr.send(data);
     });
@@ -91,8 +116,10 @@ document.addEventListener('submit', function (e) {
 
   function checkFile(box, file) {
     var max = parseInt(box.getAttribute('data-max-bytes'), 10) || 0;
-    if (file.type && ALLOWED.indexOf(file.type) === -1) return '«' + file.name + '»: допустимы PNG, JPG, WEBP, GIF и AVIF.';
-    if (max && file.size > max) return '«' + file.name + '»: файл больше ' + (max / 1048576) + ' МБ.';
+    var label = '«' + file.name + '»: ';
+    if (!file.size) return label + 'файл пустой (0 байт).';
+    if (file.type ? ALLOWED.indexOf(file.type) === -1 : !/\.(png|jpe?g|gif|webp|avif)$/i.test(file.name)) return label + 'допустимы PNG, JPG, WEBP, GIF и AVIF.';
+    if (max && file.size > max) return label + 'файл весит ' + (file.size / 1048576).toFixed(1) + ' МБ, допустимо не больше ' + (max / 1048576) + ' МБ.';
     return '';
   }
 
@@ -158,6 +185,13 @@ document.addEventListener('submit', function (e) {
       setError(box, '');
       var problem = checkFile(box, file);
       if (problem) { setError(box, problem); return; }
+      verifyImage(file).then(function (ok) {
+        if (!ok) { setError(box, '«' + file.name + '»: файл повреждён или не читается как изображение.'); return; }
+        upload(file);
+      });
+    }
+
+    function upload(file) {
       if (current) current.abort();
       var up = current = sendFile(box, file, function (p) { setProgress(bar, p); });
       box.classList.add('uploading');
@@ -251,7 +285,10 @@ document.addEventListener('submit', function (e) {
       if (files.length > room) { errors.push('Можно добавить ещё только ' + room + '.'); files = files.slice(0, room); }
       files.forEach(function (file) {
         var problem = checkFile(box, file);
-        if (problem) errors.push(problem); else addTile(file);
+        if (problem) { errors.push(problem); return; }
+        verifyImage(file).then(function (ok) {
+          if (ok) addTile(file); else setError(box, '«' + file.name + '»: файл повреждён или не читается как изображение.', true);
+        });
       });
       if (errors.length) setError(box, errors.join(' '));
     });
@@ -355,7 +392,7 @@ document.addEventListener('submit', function (e) {
   // Убираем служебные параметры, чтобы после обновления страницы уведомление не появилось снова
   try {
     var url = new URL(window.location.href);
-    ['saved', 'deleted', 'toggled', 'created', 'error', 'enabled', 'disabled'].forEach(function (k) { url.searchParams.delete(k); });
+    ['saved', 'deleted', 'toggled', 'created', 'error', 'msg', 'enabled', 'disabled'].forEach(function (k) { url.searchParams.delete(k); });
     window.history.replaceState(null, '', url.pathname + url.search + url.hash);
   } catch (err) {}
 })();
@@ -376,3 +413,23 @@ document.addEventListener('click', function (e) {
   area.setSelectionRange(caret, caret);
 });
 
+// ---------- Товары: куда ведёт кнопка «Купить» ----------
+(function () {
+  var box = document.querySelector('[data-buy]');
+  if (!box) return;
+  var select = box.querySelector('[data-buy-type]');
+  function sync() {
+    box.querySelectorAll('[data-buy-panel]').forEach(function (panel) {
+      var active = panel.getAttribute('data-buy-panel') === select.value;
+      panel.hidden = !active;
+      // отключённые поля не отправляются, поэтому на сервер уходит только активное значение
+      panel.querySelectorAll('input, select').forEach(function (field) { field.disabled = !active; });
+    });
+  }
+  select.addEventListener('change', function () {
+    sync();
+    var input = box.querySelector('[data-buy-panel="' + select.value + '"] input');
+    if (input) input.focus();
+  });
+  sync();
+})();

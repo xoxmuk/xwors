@@ -52,7 +52,7 @@ dash_start('news', 'Новости');
     <div class="table-heading">
         <div>
             <h2>Новости</h2>
-            <p>Публикации на странице «Новости». Нажмите на статус, чтобы скрыть или показать запись.</p>
+            <p>Публикации на странице «Новости». Нажмите на видимость, чтобы скрыть или опубликовать запись.</p>
         </div>
         <a class="btn-secondary" href="/admin/dashboard/news?new=1">+ Новая новость</a>
     </div>
@@ -68,7 +68,7 @@ dash_start('news', 'Новости');
                     <th>Версия</th>
                     <th>Заголовок</th>
                     <th>Дата</th>
-                    <th>Статус</th>
+                    <th>Видимость</th>
                     <th class="actions-col"><span class="sr-only">Действия</span></th>
                 </tr>
             </thead>
@@ -83,7 +83,7 @@ dash_start('news', 'Новости');
                         <form method="post" action="/api/toggle-news" class="inline-form">
                             <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
                             <input type="hidden" name="id" value="<?= (int)$item['id'] ?>">
-                            <button class="badge badge-button <?= $item['hidden'] ? 'badge-muted' : 'badge-success' ?>" type="submit" title="Нажмите, чтобы изменить видимость"><?= $item['hidden'] ? 'Скрыта' : 'Виден' ?></button>
+                            <button class="badge badge-button tooltip tip-right <?= $item['hidden'] ? 'badge-muted' : 'badge-success' ?>" type="submit" data-tooltip="<?= $item['hidden'] ? 'Новость скрыта. Нажмите, чтобы опубликовать' : 'Новость видна посетителям. Нажмите, чтобы скрыть' ?>"><?= $item['hidden'] ? 'Скрыт' : 'Опубликован' ?></button>
                         </form>
                     </td>
                     <td class="actions-cell">

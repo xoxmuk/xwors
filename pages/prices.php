@@ -8,7 +8,7 @@ $error = null;
 
 try {
     $goods = db()->query(
-        'SELECT id, status, image, name, description, price, create_at FROM goods WHERE hidden = FALSE ORDER BY create_at DESC, id DESC'
+        'SELECT id, status, image, name, description, price, purchase, create_at FROM goods WHERE hidden = FALSE ORDER BY create_at DESC, id DESC'
     )->fetchAll();
 } catch (Throwable $e) {
     error_log('Public prices page error: ' . $e->getMessage());
@@ -50,7 +50,14 @@ try {
                     </div>
                 </div>
                 <div class="product-price"><?= e(content_price((string)$good['price'])) ?></div>
-                <a class="btn" href="#">Купить</a>
+<?php $purchase = goods_purchase((string)$good['purchase']); $buyType = $purchase['type']; $buyUrl = $purchase['url']; ?>
+<?php if ($buyType === 'none' || $buyUrl === ''): ?>
+                <span class="btn btn-disabled tooltip" aria-disabled="true" tabindex="0" data-tooltip="Способ покупки пока не указан">Купить</span>
+<?php elseif ($buyType === 'page'): ?>
+                <a class="btn" href="<?= e($buyUrl) ?>">Купить</a>
+<?php else: ?>
+                <a class="btn" href="<?= e($buyUrl) ?>" target="_blank" rel="noopener noreferrer nofollow">Купить</a>
+<?php endif; ?>
             </article>
 <?php endforeach; ?>
         </div>

@@ -47,7 +47,12 @@ function handle_action(string $action): void
     }
 
     try {
-        if (!csrf_valid()) { if ($action === 'upload-image') upload_json(['ok' => false, 'error' => 'Сессия истекла. Обновите страницу.'], 403); http_response_code(403); exit('Invalid request'); }
+        // post_max_size exceeded: PHP drops the whole body ($_POST and $_FILES are empty), CSRF would look "expired"
+        if ($action === 'upload-image' && !$_POST && !$_FILES && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+            $limit = content_ini_bytes('post_max_size');
+            if ($limit > 0 && (int)$_SERVER['CONTENT_LENGTH'] > $limit) upload_json(['ok' => false, 'code' => 'server_limit', 'error' => 'Файл больше лимита сервера (' . ini_get('post_max_size') . ').'], 413);
+        }
+        if (!csrf_valid()) { if ($action === 'upload-image') upload_json(['ok' => false, 'code' => 'csrf', 'error' => 'Сессия истекла. Обновите страницу и повторите загрузку.'], 403); http_response_code(403); exit('Invalid request'); }
 
         switch ($action) {
             case 'logout':
@@ -114,7 +119,7 @@ function handle_action(string $action): void
                 $folder = (string)($_POST['folder'] ?? '');
                 $result = content_store_upload($_FILES['file'] ?? [], $folder, $folder === 'goods' ? 2 * 1024 * 1024 : 1024 * 1024);
                 if (isset($result['path'])) upload_json(['ok' => true, 'path' => $result['path']]);
-                upload_json(['ok' => false, 'error' => $result['error'] ?? 'Ошибка загрузки.'], 422);
+                upload_json(['ok' => false, 'code' => $result['code'] ?? 'error', 'error' => $result['error'] ?? 'Ошибка загрузки.'], ($result['code'] ?? '') === 'readonly' || in_array($result['code'] ?? '', ['mkdir', 'not_writable', 'move', 'disk_full', 'no_tmp', 'tmp_write', 'verify'], true) ? 507 : 422);
 
             case 'save-news':
                 require_admin();
@@ -181,13 +186,16 @@ function handle_action(string $action): void
                 if ($imageInput === '__keep__') $image = $oldImage;
                 elseif ($imageInput !== '' && (content_local_image($imageInput) ? str_starts_with($imageInput, '/assets/goods/') : true) && content_valid_image($imageInput)) $image = $imageInput;
                 if ($name === '') redirect('/admin/dashboard/goods?error=name');
+                $buy = goods_buy_resolve((string)($_POST['buy_type'] ?? 'none'), (string)($_POST['buy_value'] ?? ''), (string)($_POST['buy_page'] ?? ''));
+                if (isset($buy['error'])) redirect('/admin/dashboard/goods?' . ($id > 0 ? 'edit=' . $id . '&' : 'new=1&') . 'error=buy&msg=' . rawurlencode($buy['error']));
+                $purchaseJson = json_encode(['type' => $buy['type'], 'url' => $buy['url']], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
                 if ($id > 0) {
-                    $stmt = db()->prepare('UPDATE goods SET status = :status, image = :image, name = :name, description = :description, price = :price, hidden = CAST(:hidden AS boolean), updated_at = NOW() WHERE id = :id');
-                    $stmt->execute([':status' => $status, ':image' => $image, ':name' => $name, ':description' => $description, ':price' => $price, ':hidden' => $hidden ? 1 : 0, ':id' => $id]);
+                    $stmt = db()->prepare('UPDATE goods SET status = :status, image = :image, name = :name, description = :description, price = :price, purchase = CAST(:purchase AS jsonb), hidden = CAST(:hidden AS boolean), updated_at = NOW() WHERE id = :id');
+                    $stmt->execute([':status' => $status, ':image' => $image, ':name' => $name, ':description' => $description, ':price' => $price, ':purchase' => $purchaseJson, ':hidden' => $hidden ? 1 : 0, ':id' => $id]);
                     if ($oldImage !== $image) content_cleanup_images(db(), [$oldImage]);
                 } else {
-                    $stmt = db()->prepare('INSERT INTO goods (status, image, name, description, price, hidden) VALUES (:status, :image, :name, :description, :price, CAST(:hidden AS boolean)) RETURNING id');
-                    $stmt->execute([':status' => $status, ':image' => $image, ':name' => $name, ':description' => $description, ':price' => $price, ':hidden' => $hidden ? 1 : 0]); $id = (int)$stmt->fetchColumn();
+                    $stmt = db()->prepare('INSERT INTO goods (status, image, name, description, price, purchase, hidden) VALUES (:status, :image, :name, :description, :price, CAST(:purchase AS jsonb), CAST(:hidden AS boolean)) RETURNING id');
+                    $stmt->execute([':status' => $status, ':image' => $image, ':name' => $name, ':description' => $description, ':price' => $price, ':purchase' => $purchaseJson, ':hidden' => $hidden ? 1 : 0]); $id = (int)$stmt->fetchColumn();
                 }
                 redirect('/admin/dashboard/goods?edit=' . $id . '&saved=1');
 
@@ -197,7 +205,12 @@ function handle_action(string $action): void
                 $pdo->prepare('DELETE FROM goods WHERE id = :id')->execute([':id' => $id]);
                 if ($old !== false) content_cleanup_images($pdo, [(string)$old]);
                 redirect('/admin/dashboard/goods?deleted=1');
-            case 'toggle-good': require_admin(); db()->prepare('UPDATE goods SET hidden = NOT hidden, updated_at = NOW() WHERE id = :id')->execute([':id' => (int)($_POST['id'] ?? 0)]); redirect('/admin/dashboard/goods?toggled=1');
+            case 'toggle-good':
+                require_admin();
+                $stmt = db()->prepare('UPDATE goods SET hidden = NOT hidden, updated_at = NOW() WHERE id = :id RETURNING hidden');
+                $stmt->execute([':id' => (int)($_POST['id'] ?? 0)]);
+                $nowHidden = $stmt->fetchColumn();
+                redirect('/admin/dashboard/goods?toggled=' . ($nowHidden === false ? 'visible' : (filter_var($nowHidden, FILTER_VALIDATE_BOOLEAN) ? 'hidden' : 'visible')));
             case 'set-good-status':
                 require_admin(); $id = (int)($_POST['id'] ?? 0); $status = (string)($_POST['status'] ?? '');
                 if (!isset(goods_statuses()[$status])) redirect('/admin/dashboard/goods?error=status');
@@ -205,5 +218,5 @@ function handle_action(string $action): void
 
             default: http_response_code(404); exit('Not found');
         }
-    } catch (Throwable $e) { error_log('XWORS admin API error: ' . $e->getMessage()); if ($action === 'upload-image') upload_json(['ok' => false, 'error' => 'Ошибка сервера.'], 503); http_response_code(503); exit('Database unavailable'); }
+    } catch (Throwable $e) { error_log('XWORS admin API error: ' . $e->getMessage()); if ($action === 'upload-image') upload_json(['ok' => false, 'code' => 'exception', 'error' => 'Внутренняя ошибка сервера. Попробуйте ещё раз позже.'], 503); http_response_code(503); exit('Database unavailable'); }
 }
