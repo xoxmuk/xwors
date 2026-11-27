@@ -15,7 +15,7 @@ if ($path === '/favicon.ico' && is_file(__DIR__ . $path)) {
     readfile(__DIR__ . $path);
     return true;
 }
-if (preg_match('#^/(styles|scripts)/[\w./-]+$#', $path) && !str_contains($path, '..') && is_file(__DIR__ . $path)) {
+if (preg_match('#^/(styles|scripts|assets)/[\w./-]+$#', $path) && !str_contains($path, '..') && is_file(__DIR__ . $path)) {
     return false;
 }
 require __DIR__ . '/api/index.php';

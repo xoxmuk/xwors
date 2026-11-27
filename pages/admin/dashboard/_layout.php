@@ -21,7 +21,6 @@ function dash_start(string $active, string $title): void
         'news'     => ['Новости', '/admin/dashboard/news'],
         'goods'    => ['Товары', '/admin/dashboard/goods'],
         'users'    => ['Юзеры', '/admin/dashboard/users'],
-        'keys'     => ['Ключи', '/admin/dashboard/keys'],
         'security' => ['Безопасность', '/admin/dashboard/security'],
     ];
 ?>
