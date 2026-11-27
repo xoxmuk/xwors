@@ -360,3 +360,19 @@ document.addEventListener('submit', function (e) {
   } catch (err) {}
 })();
 
+// ---------- Кнопка «+ Tooltip» в описании новости ----------
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest('[data-insert-tooltip]');
+  if (!btn) return;
+  var field = btn.closest('.field');
+  var area = field && field.querySelector('textarea');
+  if (!area) return;
+  var start = area.selectionStart, end = area.selectionEnd;
+  var text = area.value.slice(start, end) || 'текст';
+  var open = '<span class="tooltip" data-tooltip="';
+  area.setRangeText(open + '">' + text + '</span>', start, end, 'end');
+  area.focus();
+  var caret = start + open.length;
+  area.setSelectionRange(caret, caret);
+});
+

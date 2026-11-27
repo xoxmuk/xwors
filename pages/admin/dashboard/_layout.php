@@ -33,7 +33,9 @@ function dash_start(string $active, string $title): void
     <title><?= e($title) ?> — XWorsClient Admin</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
     <link rel="stylesheet" href="/styles/index.css">
+<?php if ($active === 'security'): ?>
     <script src="/scripts/qrcode.min.js" defer></script>
+<?php endif; ?>
     <script src="/scripts/app.js" defer></script>
 </head>
 <body class="root admin-root">

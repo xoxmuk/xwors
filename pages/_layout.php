@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../lib/auth.php';
 
 function public_start(string $active, string $title): void {
+    if (!headers_sent()) header('Cache-Control: public, max-age=0, s-maxage=15, stale-while-revalidate=60');
     $items = ['index' => ['Главная', '/'], 'news' => ['Новости', '/news'], 'prices' => ['Покупка', '/prices']];
     $t = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
 ?>

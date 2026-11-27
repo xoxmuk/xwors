@@ -24,16 +24,62 @@ function db(): PDO
     return $pdo;
 }
 
+/** Expected structure: table => [CREATE TABLE statement, optional columns to add when the table exists without them]. */
+function schema_definition(): array
+{
+    return [
+        'submitted_forms' => [
+            'CREATE TABLE IF NOT EXISTS submitted_forms (token VARCHAR(64) PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())',
+            ['created_at' => 'TIMESTAMPTZ NOT NULL DEFAULT NOW()'],
+        ],
+        'users' => [
+            'CREATE TABLE IF NOT EXISTS users (uuid UUID PRIMARY KEY, "key" VARCHAR(32) NOT NULL UNIQUE, expires_at TIMESTAMPTZ NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())',
+            ['expires_at' => 'TIMESTAMPTZ NULL', 'created_at' => 'TIMESTAMPTZ NOT NULL DEFAULT NOW()'],
+        ],
+        'admins' => [
+            'CREATE TABLE IF NOT EXISTS admins (login VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, "2fa" JSONB NOT NULL DEFAULT \'{"enabled":0,"secret":null}\'::jsonb)',
+            ['2fa' => 'JSONB NOT NULL DEFAULT \'{"enabled":0,"secret":null}\'::jsonb'],
+        ],
+        'news' => [
+            'CREATE TABLE IF NOT EXISTS news (id SERIAL PRIMARY KEY, version TEXT NOT NULL DEFAULT \'\', data JSONB NOT NULL DEFAULT \'{"blocks":[],"images":[]}\'::jsonb, hidden BOOLEAN NOT NULL DEFAULT FALSE, create_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())',
+            [
+                'version' => 'TEXT NOT NULL DEFAULT \'\'',
+                'data' => 'JSONB NOT NULL DEFAULT \'{"blocks":[],"images":[]}\'::jsonb',
+                'hidden' => 'BOOLEAN NOT NULL DEFAULT FALSE',
+                'create_at' => 'TIMESTAMPTZ NOT NULL DEFAULT NOW()',
+                'updated_at' => 'TIMESTAMPTZ NOT NULL DEFAULT NOW()',
+            ],
+        ],
+        'goods' => [
+            'CREATE TABLE IF NOT EXISTS goods (id SERIAL PRIMARY KEY, status TEXT NOT NULL DEFAULT \'undetected\', image TEXT NOT NULL DEFAULT \'\', name TEXT NOT NULL DEFAULT \'\', description TEXT NOT NULL DEFAULT \'\', price NUMERIC(12,2) NOT NULL DEFAULT 0, hidden BOOLEAN NOT NULL DEFAULT FALSE, create_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())',
+            [
+                'status' => 'TEXT NOT NULL DEFAULT \'undetected\'',
+                'image' => 'TEXT NOT NULL DEFAULT \'\'',
+                'name' => 'TEXT NOT NULL DEFAULT \'\'',
+                'description' => 'TEXT NOT NULL DEFAULT \'\'',
+                'price' => 'NUMERIC(12,2) NOT NULL DEFAULT 0',
+                'hidden' => 'BOOLEAN NOT NULL DEFAULT FALSE',
+                'create_at' => 'TIMESTAMPTZ NOT NULL DEFAULT NOW()',
+                'updated_at' => 'TIMESTAMPTZ NOT NULL DEFAULT NOW()',
+            ],
+        ],
+    ];
+}
+
+/** One lookup in information_schema: missing tables are created, missing columns are added, everything that exists is skipped. */
 function ensure_schema(PDO $pdo): void
 {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS submitted_forms (token VARCHAR(64) PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
-    $pdo->exec('CREATE TABLE IF NOT EXISTS users (uuid UUID PRIMARY KEY, "key" VARCHAR(32) NOT NULL UNIQUE, expires_at TIMESTAMPTZ NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())');
-    $pdo->exec("CREATE TABLE IF NOT EXISTS admins (login VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, \"2fa\" JSONB NOT NULL DEFAULT '{\"enabled\":0,\"secret\":null}'::jsonb)");
-    $pdo->exec("ALTER TABLE admins ADD COLUMN IF NOT EXISTS \"2fa\" JSONB NOT NULL DEFAULT '{\"enabled\":0,\"secret\":null}'::jsonb");
-    $pdo->exec("CREATE TABLE IF NOT EXISTS news (id SERIAL PRIMARY KEY, version TEXT NOT NULL DEFAULT '', data JSONB NOT NULL DEFAULT '{\"blocks\":[],\"images\":[]}'::jsonb, hidden BOOLEAN NOT NULL DEFAULT FALSE, create_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
-    $pdo->exec("ALTER TABLE news ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT FALSE");
-    $pdo->exec("ALTER TABLE news ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()");
-    $pdo->exec("CREATE TABLE IF NOT EXISTS goods (id SERIAL PRIMARY KEY, status TEXT NOT NULL DEFAULT 'undetected', image TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', description TEXT NOT NULL DEFAULT '', price NUMERIC(12,2) NOT NULL DEFAULT 0, hidden BOOLEAN NOT NULL DEFAULT FALSE, create_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
-    $pdo->exec("ALTER TABLE goods ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT FALSE");
-    $pdo->exec("ALTER TABLE goods ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()");
+    $definition = schema_definition();
+    $tables = array_keys($definition);
+    $stmt = $pdo->prepare('SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = current_schema() AND table_name IN (' . implode(',', array_fill(0, count($tables), '?')) . ')');
+    $stmt->execute($tables);
+    $existing = [];
+    foreach ($stmt->fetchAll() as $row) $existing[$row['table_name']][$row['column_name']] = true;
+
+    foreach ($definition as $table => [$create, $columns]) {
+        if (!isset($existing[$table])) { $pdo->exec($create); continue; }
+        foreach ($columns as $column => $type) {
+            if (!isset($existing[$table][$column])) $pdo->exec('ALTER TABLE "' . $table . '" ADD COLUMN IF NOT EXISTS "' . $column . '" ' . $type);
+        }
+    }
 }

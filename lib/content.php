@@ -128,8 +128,19 @@ function content_clean_node(DOMNode $node): void
             }
             foreach (iterator_to_array($child->attributes) as $attr) {
                 $name = strtolower($attr->name);
+                if ($name === 'data-tooltip' || $name === 'class') continue; // handled below
                 if (!in_array($name, CONTENT_HTML_TAGS[$tag], true)) { $child->removeAttribute($attr->name); continue; }
                 if (($name === 'href' || $name === 'src') && !content_safe_url($attr->value, $name === 'src')) $child->removeAttribute($attr->name);
+            }
+            // Tooltip: data-tooltip="…" (class="tooltip" is added automatically); no other classes are allowed
+            $tip = trim($child->getAttribute('data-tooltip'));
+            if (preg_match('/^.{0,300}/su', $tip, $m)) $tip = $m[0];
+            $child->removeAttribute('class');
+            $child->removeAttribute('data-tooltip');
+            if ($tip !== '' && !in_array($tag, ['img', 'br', 'hr'], true)) {
+                $child->setAttribute('class', 'tooltip');
+                $child->setAttribute('data-tooltip', $tip);
+                $child->setAttribute('tabindex', '0');
             }
             if ($tag === 'a') { $child->setAttribute('rel', 'noopener noreferrer nofollow'); $child->setAttribute('target', '_blank'); }
             if ($tag === 'img') $child->setAttribute('loading', 'lazy');

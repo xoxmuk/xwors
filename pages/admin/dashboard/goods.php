@@ -13,7 +13,7 @@ $error = null;
 
 try {
     $goods = db()->query(
-        'SELECT id, status, image, name, description, price, hidden, create_at FROM goods ORDER BY create_at DESC, id DESC'
+        'SELECT id, status, image, name, price, hidden, create_at FROM goods ORDER BY create_at DESC, id DESC'
     )->fetchAll();
 
     if ($editId > 0) {

@@ -13,7 +13,7 @@ $error = null;
 
 try {
     $news = db()->query(
-        'SELECT id, version, data, hidden, create_at FROM news ORDER BY create_at DESC, id DESC'
+        "SELECT id, version, hidden, create_at, CASE WHEN jsonb_typeof(data->'blocks') = 'array' THEN (SELECT b->>'title' FROM jsonb_array_elements(data->'blocks') AS b WHERE COALESCE(b->>'title', '') <> '' LIMIT 1) END AS title FROM news ORDER BY create_at DESC, id DESC"
     )->fetchAll();
 
     if ($editId > 0) {
@@ -74,11 +74,10 @@ dash_start('news', 'Новости');
             </thead>
             <tbody>
 <?php foreach ($news as $item): ?>
-<?php $itemData = news_data((string)$item['data']); ?>
                 <tr>
                     <td><?= (int)$item['id'] ?></td>
                     <td><?= $item['version'] !== '' ? e((string)$item['version']) : '—' ?></td>
-                    <td><?= e(news_first_title($itemData)) ?: '—' ?></td>
+                    <td><?= e((string)($item['title'] ?? '')) ?: '—' ?></td>
                     <td><?= e(admin_news_date($item['create_at'])) ?></td>
                     <td>
                         <form method="post" action="/api/toggle-news" class="inline-form">
@@ -108,7 +107,7 @@ dash_start('news', 'Новости');
 <?php if ($showForm): ?>
 <section class="panel-card" id="news-form">
     <h2><?= $editing ? 'Редактировать новость #' . (int)$editing['id'] : 'Новая новость' ?></h2>
-    <p>Каждый блок — это заголовок и описание. Описание можно писать с HTML-разметкой.</p>
+    <p>Каждый блок — это заголовок и описание. Описание можно писать с HTML-разметкой; подсказку при наведении добавляет кнопка «+ Tooltip» или атрибут <code>data-tooltip="…"</code>.</p>
     <form method="post" action="/api/save-news" class="admin-form">
         <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
         <input type="hidden" name="id" value="<?= (int)($editing['id'] ?? 0) ?>">
@@ -140,6 +139,7 @@ dash_start('news', 'Новости');
                     <div class="field">
                         <label>Описание</label>
                         <textarea name="block_description[]" rows="6" placeholder="Текст или HTML: &lt;b&gt;, &lt;i&gt;, &lt;a href=&quot;…&quot;&gt;, &lt;ul&gt;&lt;li&gt;, &lt;img src=&quot;…&quot;&gt;"><?= e($block['description']) ?></textarea>
+                    <div class="field-tools"><button type="button" class="btn-secondary" data-insert-tooltip>+ Tooltip</button><span class="hint">Подсказка при наведении на выделенный текст</span></div>
                     </div>
                 </div>
 <?php endforeach; ?>
@@ -167,6 +167,7 @@ dash_start('news', 'Новости');
         <div class="field">
             <label>Описание</label>
             <textarea name="block_description[]" rows="6" placeholder="Текст или HTML: &lt;b&gt;, &lt;i&gt;, &lt;a href=&quot;…&quot;&gt;, &lt;ul&gt;&lt;li&gt;, &lt;img src=&quot;…&quot;&gt;"></textarea>
+            <div class="field-tools"><button type="button" class="btn-secondary" data-insert-tooltip>+ Tooltip</button><span class="hint">Подсказка при наведении на выделенный текст</span></div>
         </div>
     </div>
 </template>

@@ -7,6 +7,7 @@ const CSRF_COOKIE = 'xwors_csrf';
 const PREAUTH_COOKIE = 'xwors_2fa';
 const AUTH_TTL = 86400;
 const PREAUTH_TTL = 300;
+const AUTH_RECHECK = 300;
 
 function auth_secret(): string
 {
@@ -66,11 +67,11 @@ function auth_is_https(): bool
 
 function set_signed_cookie(string $name, array $data, int $ttl): void
 {
-    $data['exp'] = time() + $ttl;
+    $data['exp'] = (int)($data['exp'] ?? (time() + $ttl));
     $payload = rtrim(strtr(base64_encode(json_encode($data, JSON_THROW_ON_ERROR)), '+/', '-_'), '=');
     $signature = hash_hmac('sha256', $payload, auth_secret());
     setcookie($name, $payload . '.' . $signature, [
-        'expires' => time() + $ttl, 'path' => '/', 'secure' => auth_is_https(),
+        'expires' => $data['exp'], 'path' => '/', 'secure' => auth_is_https(),
         'httponly' => true, 'samesite' => 'Strict',
     ]);
 }
@@ -89,7 +90,7 @@ function read_signed_cookie(string $name): ?array
 
 function auth_login(string $login): void
 {
-    set_signed_cookie(AUTH_COOKIE, ['login' => $login, 'purpose' => 'session'], AUTH_TTL);
+    set_signed_cookie(AUTH_COOKIE, ['login' => $login, 'purpose' => 'session', 'chk' => time()], AUTH_TTL);
     clear_cookie(PREAUTH_COOKIE);
 }
 
@@ -141,10 +142,16 @@ function admin_login_exists(string $login): bool
     return admin_by_login($login) !== null;
 }
 
+/**
+ * The session cookie is signed and only issued after the login/password (and 2FA) check, so the admin is re-verified
+ * against the database (bcrypt) at most once per AUTH_RECHECK seconds instead of on every request.
+ */
 function require_admin(): string
 {
-    $login = auth_user();
-    if ($login === null) redirect('/admin');
+    $data = read_signed_cookie(AUTH_COOKIE);
+    if (!$data || ($data['purpose'] ?? '') !== 'session') redirect('/admin');
+    $login = $data['login'];
+    if ((int)($data['chk'] ?? 0) > time() - AUTH_RECHECK) return $login;
     try {
         if (!admin_login_exists($login)) {
             auth_logout();
@@ -155,6 +162,8 @@ function require_admin(): string
         http_response_code(503);
         exit('Database unavailable');
     }
+    $data['chk'] = time();
+    if (!headers_sent()) set_signed_cookie(AUTH_COOKIE, $data, AUTH_TTL);
     return $login;
 }
 

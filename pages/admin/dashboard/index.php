@@ -4,10 +4,8 @@ dash_start('index', 'Главная');
 
 try {
     $pdo = db();
-    $total = (int)$pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
-    $active = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE expires_at IS NULL OR expires_at > NOW()')->fetchColumn();
-    $newsCount = (int)$pdo->query('SELECT COUNT(*) FROM news')->fetchColumn();
-    $goodsCount = (int)$pdo->query('SELECT COUNT(*) FROM goods')->fetchColumn();
+    $counts = $pdo->query('SELECT (SELECT COUNT(*) FROM users) AS total, (SELECT COUNT(*) FROM users WHERE expires_at IS NULL OR expires_at > NOW()) AS active, (SELECT COUNT(*) FROM news) AS news, (SELECT COUNT(*) FROM goods) AS goods')->fetch();
+    $total = (int)$counts['total']; $active = (int)$counts['active']; $newsCount = (int)$counts['news']; $goodsCount = (int)$counts['goods'];
 } catch (Throwable $e) {
     error_log('Dashboard stats error: ' . $e->getMessage());
     $total = $active = $newsCount = $goodsCount = null;

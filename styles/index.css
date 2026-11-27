@@ -638,3 +638,9 @@ h2.tooltip { width: fit-content; }
 .news-text table { border-collapse: collapse; }
 .news-text th, .news-text td { padding: 6px 10px; border: 1px solid var(--line); }
 
+/* Tooltips inside news text */
+.news-text .tooltip { width: fit-content; cursor: help; text-decoration: underline dotted #777; text-underline-offset: 3px; }
+.news-text .tooltip::after { text-decoration: none; }
+.field-tools { display: flex; align-items: center; gap: 10px; }
+.field-tools .hint { margin-top: 0 !important; }
+
