@@ -486,3 +486,61 @@ document.addEventListener('click', function (e) {
   });
   sync();
 })();
+
+
+// ---------- Выбор срока подписки в карточке товара ----------
+(function () {
+  function closeMenus(except) {
+    document.querySelectorAll('[data-duration-menu]').forEach(function (menu) {
+      if (menu === except) return;
+      menu.hidden = true;
+      var trigger = menu.parentElement.querySelector('[data-duration-trigger]');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  document.addEventListener('click', function (event) {
+    var trigger = event.target.closest('[data-duration-trigger]');
+    if (trigger) {
+      var picker = trigger.closest('.duration-picker');
+      var menu = picker && picker.querySelector('[data-duration-menu]');
+      if (!menu) return;
+      var opening = menu.hidden;
+      closeMenus(menu);
+      menu.hidden = !opening;
+      trigger.setAttribute('aria-expanded', opening ? 'true' : 'false');
+      return;
+    }
+
+    var option = event.target.closest('.duration-menu [data-days]');
+    if (option) {
+      var menu = option.closest('[data-duration-menu]');
+      var picker = menu.closest('.duration-picker');
+      var row = picker.closest('.product-price-row');
+      var days = Number(option.getAttribute('data-days'));
+      var label = option.getAttribute('data-label');
+      var dailyPrice = Number(row.getAttribute('data-daily-price'));
+      var price = row.querySelector('[data-total-price]');
+      var value = picker.querySelector('[data-duration-value]');
+      value.textContent = label;
+      menu.querySelectorAll('[data-days]').forEach(function (item) {
+        item.setAttribute('aria-selected', item === option ? 'true' : 'false');
+      });
+      if (days === 0) {
+        price.textContent = dailyPrice > 0 ? 'Цена по запросу' : 'Цена по запросу';
+      } else {
+        var total = dailyPrice * days;
+        price.textContent = (Number.isInteger(total) ? total.toLocaleString('ru-RU') : total.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2})) + ' ₽';
+      }
+      menu.hidden = true;
+      picker.querySelector('[data-duration-trigger]').setAttribute('aria-expanded', 'false');
+      return;
+    }
+
+    if (!event.target.closest('.duration-picker')) closeMenus(null);
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') closeMenus(null);
+  });
+})();

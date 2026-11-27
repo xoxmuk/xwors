@@ -49,7 +49,21 @@ try {
 <?php endif; ?>
                     </div>
                 </div>
-                <div class="product-price"><?= e(content_price((string)$good['price'])) ?></div>
+                <?php $dailyPrice = (float)$good['price']; ?>
+                <div class="product-price-row" data-daily-price="<?= e((string)$dailyPrice) ?>">
+                    <span class="product-price" data-total-price><?= e(content_price($dailyPrice)) ?></span>
+                    <span class="product-price-separator">/</span>
+                    <div class="duration-picker">
+                        <button class="duration-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" data-duration-trigger>
+                            <span data-duration-value>1d</span>
+                        </button>
+                        <div class="duration-menu" role="listbox" aria-label="Срок действия подписки" data-duration-menu hidden>
+                            <?php foreach (['1d' => 1, '3d' => 3, '7d' => 7, '14d' => 14, '30d' => 30, '90d' => 90, 'Навсегда' => 0] as $durationLabel => $days): ?>
+                                <button type="button" role="option" aria-selected="<?= $days === 1 ? 'true' : 'false' ?>" data-days="<?= $days ?>" data-label="<?= e($durationLabel) ?>"><?= e($durationLabel) ?></button>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
 <?php $purchase = goods_purchase((string)$good['purchase']); $buyType = $purchase['type']; $buyUrl = $purchase['url']; ?>
 <?php if ($buyType === 'none' || $buyUrl === ''): ?>
                 <span class="btn btn-disabled tooltip" aria-disabled="true" tabindex="0" tooltip-text="Способ покупки пока не указан">Купить</span>
