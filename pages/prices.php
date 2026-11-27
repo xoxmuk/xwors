@@ -9,12 +9,12 @@ public_start('prices', 'Покупка');
     </div>
     <div>
         <h1 class="center">Доступные товары</h1>
-        <div class="center row">
+        <div class="products">
 
-            <div class="card col">
+            <div class="card col product">
                 <div>
                     <img src="https://i.imgur.com/gPOklv3.png" alt="Product Image">
-                    <div class="row"><h2>Product Name</h2><span class="status" data-color="lime"><i></i> Undetected</span></div>
+                    <div class="product-head"><h2>Product Name</h2><span class="status" data-color="lime"><i></i> Undetected</span></div>
                 </div>
                 <div>
                     <div class="label">Product Information</div>
@@ -23,13 +23,13 @@ public_start('prices', 'Покупка');
                         <p class="tooltip" data-tooltip="In no way involved in the administration or management of the site.">Interactive Information</p>
                     </div>
                 </div>
-                <a href="#">Buy</a>
+                <a class="btn" href="#">Buy</a>
             </div>
 
-            <div class="card col">
+            <div class="card col product">
                 <div>
                     <img src="https://i.imgur.com/gPOklv3.png" alt="Product Image">
-                    <div class="row"><h2>Product Name</h2><span class="status" data-color="lime"><i></i> Undetected</span></div>
+                    <div class="product-head"><h2>Product Name</h2><span class="status" data-color="lime"><i></i> Undetected</span></div>
                 </div>
                 <div>
                     <div class="label">Product Information</div>
@@ -38,7 +38,7 @@ public_start('prices', 'Покупка');
                         <p class="tooltip" data-tooltip="In no way involved in the administration or management of the site.">Interactive Information</p>
                     </div>
                 </div>
-                <a href="#">Buy</a>
+                <a class="btn" href="#">Buy</a>
             </div>
 
         </div>

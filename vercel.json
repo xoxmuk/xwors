@@ -15,7 +15,7 @@
         "X-Frame-Options": "DENY",
         "Referrer-Policy": "same-origin",
         "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-        "Content-Security-Policy": "default-src 'self'; img-src 'self' data:; frame-ancestors 'none'; form-action 'self'; base-uri 'none'"
+        "Content-Security-Policy": "default-src 'self'; img-src 'self' data: https://i.imgur.com; frame-ancestors 'none'; form-action 'self'; base-uri 'none'"
       },
       "continue": true
     },
