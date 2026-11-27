@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="95d5a405-b495-40fc-b55f-fc415862849a" name="Изменения" comment="0.2.7">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pages/_layout.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/_layout.php" afterDir="false" />
+    <list default="true" id="95d5a405-b495-40fc-b55f-fc415862849a" name="Изменения" comment="0.2.8">
       <change beforePath="$PROJECT_DIR$/pages/admin/dashboard/_layout.php" beforeDir="false" afterPath="$PROJECT_DIR$/pages/admin/dashboard/_layout.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -55,7 +53,6 @@
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="0.0.3" />
     <MESSAGE value="0.0.4" />
     <MESSAGE value="0.0.5" />
     <MESSAGE value="0.0.6" />
@@ -80,6 +77,7 @@
     <MESSAGE value="0.2.5" />
     <MESSAGE value="0.2.6" />
     <MESSAGE value="0.2.7" />
-    <option name="LAST_COMMIT_MESSAGE" value="0.2.7" />
+    <MESSAGE value="0.2.8" />
+    <option name="LAST_COMMIT_MESSAGE" value="0.2.8" />
   </component>
 </project>
