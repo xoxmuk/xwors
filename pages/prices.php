@@ -31,9 +31,7 @@ try {
 <?php $meta = goods_status_meta((string)$good['status']); ?>
             <article class="card col product">
                 <div>
-<?php if ((string)$good['image'] !== ''): ?>
-                    <img src="<?= e((string)$good['image']) ?>" alt="<?= e((string)$good['name']) ?>" loading="lazy">
-<?php endif; ?>
+                    <img src="<?= e((string)$good['image'] !== '' ? (string)$good['image'] : '/assets/goods/default_64.png') ?>" alt="<?= e((string)$good['name']) ?>" loading="lazy">
                     <div class="product-head">
                         <h2><?= e((string)$good['name']) ?></h2>
                         <span class="status" data-color="<?= e($meta['color']) ?>"><i></i> <?= e($meta['label']) ?></span>
@@ -43,7 +41,7 @@ try {
                     <div class="label">Описание</div>
                     <div>
 <?php if ((string)$good['description'] !== ''): ?>
-                        <p><?= nl2br(e((string)$good['description'])) ?></p>
+                        <div class="product-description"><?= content_render_html((string)$good['description']) ?></div>
 <?php else: ?>
                         <p>Описание не указано.</p>
 <?php endif; ?>
@@ -58,7 +56,7 @@ try {
                             <span data-duration-value>1d</span>
                         </button>
                         <div class="duration-menu" role="listbox" aria-label="Срок действия подписки" data-duration-menu hidden>
-                            <?php foreach (['1d' => 1, '3d' => 3, '7d' => 7, '14d' => 14, '30d' => 30, '90d' => 90, 'Навсегда' => 0] as $durationLabel => $days): ?>
+                            <?php foreach (['1d' => 1, '3d' => 3, '7d' => 7, '14d' => 14, '30d' => 30, '90d' => 90, 'Permanently' => 360] as $durationLabel => $days): ?>
                                 <button type="button" role="option" aria-selected="<?= $days === 1 ? 'true' : 'false' ?>" data-days="<?= $days ?>" data-label="<?= e($durationLabel) ?>"><?= e($durationLabel) ?></button>
                             <?php endforeach; ?>
                         </div>

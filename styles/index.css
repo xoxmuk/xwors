@@ -840,3 +840,22 @@ h2 .info-tip, h3 .info-tip { vertical-align: 2px; }
 .users-table .copy-value { cursor: copy; user-select: text; transition: color .18s ease; }
 .users-table .copy-value:hover { color: var(--white); }
 .users-table .copy-value.copied { color: #8bd49a; }
+
+
+/* Product icon type chooser */
+.icon-type-toggle { align-self: flex-start; margin-bottom: 10px; }
+.icon-type-options { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.icon-existing-options { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 12px; }
+.icon-choice { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px; border: 1px solid #333; border-radius: 12px; background: #171717; color: var(--text); cursor: pointer; }
+.icon-choice img { width: 64px; height: 64px; object-fit: contain; margin: 0; }
+.product-description { overflow-wrap: anywhere; }
+.product-description .tooltip, .news-text .tooltip { display: inline; cursor: help; }
+.product-description .tooltip::after, .news-text .tooltip::after { z-index: 1200; }
+.tooltip[tooltip-position="up"]:hover::after,
+.tooltip[tooltip-position="up"]:focus-visible::after { transform: translate(-50%, 0); }
+
+/* Keep chooser panels hidden even when their layout uses flex. */
+.icon-type-options[hidden], .icon-existing-options[hidden] { display: none !important; }
+
+.news-text .tooltip:hover, .news-text .tooltip:focus-visible,
+.product-description .tooltip:hover, .product-description .tooltip:focus-visible { z-index: 1300; }

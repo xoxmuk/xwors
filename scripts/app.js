@@ -459,12 +459,66 @@ document.addEventListener('click', function (e) {
   if (!area) return;
   var start = area.selectionStart, end = area.selectionEnd;
   var text = area.value.slice(start, end) || 'текст';
-  var open = '<span class="tooltip" tooltip-text="';
-  area.setRangeText(open + '">' + text + '</span>', start, end, 'end');
+  var open = '<span tooltip-text="Подсказка" tooltip-position="up">';
+  area.setRangeText(open + text + '</span>', start, end, 'end');
   area.focus();
-  var caret = start + open.length;
-  area.setSelectionRange(caret, caret);
+  area.setSelectionRange(start + open.length, start + open.length);
 });
+
+// ---------- Выбор типа иконки товара ----------
+(function () {
+  var form = document.querySelector('#goods-form form');
+  if (!form) return;
+  var toggle = form.querySelector('[data-icon-type-toggle]');
+  var options = form.querySelector('[data-icon-type-options]');
+  var existingToggle = form.querySelector('[data-icon-existing-toggle]');
+  var existing = form.querySelector('[data-icon-existing-options]');
+  var upload = form.querySelector('[data-icon-upload]');
+  var uploader = form.querySelector('[data-uploader="single"]');
+  var fileInput = uploader && uploader.querySelector('[data-file]');
+  var value = uploader && uploader.querySelector('[data-value]');
+  var preview = uploader && uploader.querySelector('[data-preview]');
+  var empty = uploader && uploader.querySelector('[data-empty]');
+  var remove = uploader && uploader.querySelector('[data-remove]');
+  var url = form.querySelector('[data-url]');
+
+  function setImage(src) {
+    if (!value || !preview) return;
+    value.value = src || '';
+    if (url) url.value = '';
+    if (src) { preview.src = src; preview.hidden = false; }
+    else { preview.removeAttribute('src'); preview.hidden = true; }
+    if (empty) empty.hidden = !!src;
+    if (remove) remove.hidden = !src;
+    if (uploader) uploader.classList.toggle('has-image', !!src);
+  }
+
+  if (toggle) toggle.addEventListener('click', function () {
+    var open = options.hidden;
+    options.hidden = !open;
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  if (upload) upload.addEventListener('click', function () {
+    options.hidden = true;
+    if (fileInput) fileInput.click();
+    else if (uploader) uploader.querySelector('[data-drop]').click();
+  });
+  if (existingToggle) existingToggle.addEventListener('click', function () {
+    existing.hidden = !existing.hidden;
+  });
+  form.querySelectorAll('[data-icon-choice]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      setImage(button.getAttribute('data-icon-choice'));
+      existing.hidden = true;
+      options.hidden = true;
+    });
+  });
+  var urlToggle = form.querySelector('[data-icon-url-toggle]');
+  if (urlToggle) urlToggle.addEventListener('click', function () {
+    options.hidden = true;
+    if (url) { url.focus(); url.scrollIntoView({behavior: 'smooth', block: 'center'}); }
+  });
+})();
 
 // ---------- Товары: куда ведёт кнопка «Купить» ----------
 (function () {
@@ -526,12 +580,8 @@ document.addEventListener('click', function (e) {
       menu.querySelectorAll('[data-days]').forEach(function (item) {
         item.setAttribute('aria-selected', item === option ? 'true' : 'false');
       });
-      if (days === 0) {
-        price.textContent = dailyPrice > 0 ? 'Цена по запросу' : 'Цена по запросу';
-      } else {
-        var total = dailyPrice * days;
-        price.textContent = (Number.isInteger(total) ? total.toLocaleString('ru-RU') : total.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2})) + ' ₽';
-      }
+      var total = dailyPrice * days;
+      price.textContent = (Number.isInteger(total) ? total.toLocaleString('ru-RU') : total.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2})) + ' ₽';
       menu.hidden = true;
       picker.querySelector('[data-duration-trigger]').setAttribute('aria-expanded', 'false');
       return;

@@ -91,11 +91,7 @@ dash_start('goods', 'Товары');
                 <tr>
                     <td><?= (int)$item['id'] ?></td>
                     <td>
-<?php if ((string)$item['image'] !== ''): ?>
-                        <img class="table-thumb" src="<?= e((string)$item['image']) ?>" alt="">
-<?php else: ?>
-                        —
-<?php endif; ?>
+                        <img class="table-thumb" src="<?= e((string)$item['image'] !== '' ? (string)$item['image'] : '/assets/goods/default_64.png') ?>" alt="">
                     </td>
                     <td><?= e((string)$item['name']) ?: '—' ?></td>
                     <td><?= e(content_price((string)$item['price'])) ?></td>
@@ -142,7 +138,17 @@ dash_start('goods', 'Товары');
         <input type="hidden" name="id" value="<?= (int)($editing['id'] ?? 0) ?>">
 
         <div class="field">
-            <span class="field-label">Изображение товара</span>
+            <span class="field-label">Иконка товара</span>
+            <button type="button" class="btn-secondary icon-type-toggle" data-icon-type-toggle aria-expanded="false">Выбрать тип иконки</button>
+            <div class="icon-type-options" data-icon-type-options hidden>
+                <button type="button" class="btn-secondary" data-icon-upload>Загрузить</button>
+                <button type="button" class="btn-secondary" data-icon-existing-toggle>Выбрать существующую</button>
+                <button type="button" class="btn-secondary" data-icon-url-toggle>URL</button>
+            </div>
+            <div class="icon-existing-options" data-icon-existing-options hidden>
+                <button type="button" class="icon-choice" data-icon-choice="/assets/goods/default_64.png"><img src="/assets/goods/default_64.png" alt=""><span>Default 64</span></button>
+                <button type="button" class="icon-choice" data-icon-choice="/assets/goods/default_1254.png"><img src="/assets/goods/default_1254.png" alt=""><span>Default 1254</span></button>
+            </div>
             <div class="media-box single" data-uploader="single" data-folder="goods" data-max-bytes="2097152" data-csrf="<?= e($csrf) ?>">
                 <input type="hidden" name="image" value="<?= $formImage !== '' ? '__keep__' : '' ?>" data-value>
                 <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" hidden data-file>
@@ -214,6 +220,7 @@ dash_start('goods', 'Товары');
         <div class="field">
             <label for="good-description">Описание</label>
             <textarea id="good-description" name="description" rows="4"><?= e($formDescription) ?></textarea>
+            <div class="field-tools"><button type="button" class="btn-secondary" data-insert-tooltip>+ Tooltip</button><span class="hint">Выделите текст и добавьте подсказку при наведении</span></div>
         </div>
 
         <div class="admin-actions">
