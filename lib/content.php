@@ -293,18 +293,34 @@ function content_clean_node(DOMNode $node): void
             $validTipPositions = ['left-up', 'up', 'right-up', 'left', 'right', 'left-bottom', 'bottom', 'right-bottom'];
             if (!in_array($tipPosition, $validTipPositions, true)) $tipPosition = 'up';
             if (preg_match('/^.{0,300}/su', $tip, $m)) $tip = $m[0];
-            $requestedClass = trim($child->getAttribute('class'));
-            $allowedDivClasses = ['center', 'left', 'right', 'devider'];
-            $safeDivClass = $tag === 'div' && in_array($requestedClass, $allowedDivClasses, true) ? $requestedClass : '';
-            $deviderText = $tag === 'div' && $safeDivClass === 'devider'
-                ? mb_substr(trim($child->getAttribute('devider-text')), 0, 160)
-                : '';
+            $requestedClasses = preg_split('/\\s+/', trim($child->getAttribute('class'))) ?: [];
+            $safeDivClass = '';
+            $deviderText = '';
+            if ($tag === 'div') {
+                // Keep only the supported layout classes. A divider may be aligned with
+                // "devider left" or "devider right"; arbitrary classes are discarded.
+                $allowedDivClasses = ['center', 'left', 'right', 'devider'];
+                $safeClasses = array_values(array_intersect($requestedClasses, $allowedDivClasses));
+                if (in_array('devider', $safeClasses, true)) {
+                    $alignment = in_array('left', $safeClasses, true) ? 'left'
+                        : (in_array('right', $safeClasses, true) ? 'right' : '');
+                    $safeDivClass = 'devider' . ($alignment !== '' ? ' ' . $alignment : '');
+                    $deviderText = mb_substr(trim($child->getAttribute('devider-text')), 0, 160);
+                } elseif (count($safeClasses) === 1) {
+                    $safeDivClass = $safeClasses[0];
+                }
+            }
             $child->removeAttribute('class');
             $child->removeAttribute('tooltip-text');
             $child->removeAttribute('tooltip-position');
             $child->removeAttribute('devider-text');
             if ($safeDivClass !== '') $child->setAttribute('class', $safeDivClass);
-            if ($safeDivClass === 'devider' && $deviderText !== '') $child->setAttribute('devider-text', $deviderText);
+            if (str_starts_with($safeDivClass, 'devider') && $deviderText !== '') {
+                $child->setAttribute('devider-text', $deviderText);
+                // The divider is authored as an empty div. Put the label into the DOM
+                // between the two CSS-generated horizontal rules.
+                if (trim($child->textContent) === '') $child->appendChild($child->ownerDocument->createTextNode($deviderText));
+            }
             if ($tip !== '' && !in_array($tag, ['img', 'br', 'hr'], true)) {
                 $child->setAttribute('class', 'tooltip');
                 $child->setAttribute('tooltip-text', $tip);

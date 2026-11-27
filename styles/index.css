@@ -719,10 +719,14 @@ h2.tooltip { width: fit-content; }
 .news-text .devider::before,
 .news-text .devider::after {
     content: "";
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-width: 12px;
     border-top: 1px solid var(--line);
 }
+.news-text .devider.left::before { flex: 0 0 2.5rem; }
+.news-text .devider.left::after { flex: 1 1 auto; }
+.news-text .devider.right::before { flex: 1 1 auto; }
+.news-text .devider.right::after { flex: 0 0 2.5rem; }
 .news-text .devider:not([devider-text])::after { display: none; }
 .news-text .devider:not([devider-text]) { display: block; border-top: 1px solid var(--line); }
 .news-text > * + * { margin-top: 10px; }

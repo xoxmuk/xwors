@@ -107,7 +107,7 @@ dash_start('news', 'Новости');
 <?php if ($showForm): ?>
 <section class="panel-card" id="news-form">
     <h2><?= $editing ? 'Редактировать новость #' . (int)$editing['id'] : 'Новая новость' ?></h2>
-    <p>Каждый блок — это заголовок и описание. Описание можно писать с HTML-разметкой; подсказку при наведении добавляет кнопка «+ Tooltip» или атрибут <code>tooltip-text="…"</code>.</p>
+    <p>Каждый блок — это заголовок и описание. Описание можно писать с HTML-разметкой; подсказку при наведении добавляет кнопка «+ Tooltip» или атрибут <code>tooltip-text="…"</code>. Разделитель с подписью: <code>&lt;div class="devider" devider-text="Текст"&gt;&lt;/div&gt;</code>; для выравнивания добавьте класс <code>left</code> или <code>right</code>.</p>
     <form method="post" action="/api/save-news" class="admin-form">
         <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
         <input type="hidden" name="id" value="<?= (int)($editing['id'] ?? 0) ?>">
