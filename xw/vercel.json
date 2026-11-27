@@ -1,0 +1,66 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.php",
+      "use": "vercel-php@0.7.1"
+    },
+    {
+      "src": "styles/**/*.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "scripts/**/*.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "public/assets/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "favicon.ico",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/favicon.ico",
+      "dest": "/favicon.ico"
+    },
+    {
+      "src": "/(.*)",
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "same-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+        "Content-Security-Policy": "default-src 'self'; img-src 'self' data: https:; frame-ancestors 'none'; form-action 'self'; base-uri 'none'"
+      },
+      "continue": true
+    },
+    {
+      "src": "/styles/(.*)",
+      "dest": "/styles/$1"
+    },
+    {
+      "src": "/scripts/(.*)",
+      "dest": "/scripts/$1"
+    },
+    {
+      "src": "/assets/(.*)",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      },
+      "continue": true
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/public/assets/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.php"
+    }
+  ]
+}

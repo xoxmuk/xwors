@@ -13,11 +13,11 @@ $error = null;
 
 try {
     $goods = db()->query(
-        'SELECT id, status, image, name, price, hidden, create_at FROM goods ORDER BY create_at DESC, id DESC'
+        'SELECT id, status, image, name, prices, discount, hidden, create_at FROM goods ORDER BY create_at DESC, id DESC'
     )->fetchAll();
 
     if ($editId > 0) {
-        $stmt = db()->prepare('SELECT id, status, image, name, description, price, purchase, hidden, create_at FROM goods WHERE id = :id');
+        $stmt = db()->prepare('SELECT id, status, image, name, description, prices, discount, purchase, hidden, create_at FROM goods WHERE id = :id');
         $stmt->execute([':id' => $editId]);
         $editing = $stmt->fetch() ?: null;
         if (!$editing) $error = 'Товар не найден. Возможно, его уже удалили.';
@@ -32,7 +32,8 @@ if (!isset(goods_statuses()[$formStatus])) $formStatus = 'undetected';
 $formImage = (string)($editing['image'] ?? '');
 $formName = (string)($editing['name'] ?? '');
 $formDescription = (string)($editing['description'] ?? '');
-$formPrice = (string)($editing['price'] ?? '0');
+$formPrices = goods_prices(isset($editing['prices']) ? (string)$editing['prices'] : '[{"name":"1d","price":0,"discount":0}]');
+$formDiscount = (float)($editing['discount'] ?? 0);
 $purchase = goods_purchase(isset($editing['purchase']) ? (string)$editing['purchase'] : null);
 $formBuyType = $purchase['type'];
 $formBuyUrl = $purchase['url'];
@@ -94,7 +95,7 @@ dash_start('goods', 'Товары');
                         <img class="table-thumb" src="<?= e((string)$item['image'] !== '' ? (string)$item['image'] : '/assets/goods/default_64.png') ?>" alt="">
                     </td>
                     <td><?= e((string)$item['name']) ?: '—' ?></td>
-                    <td><?= e(content_price((string)$item['price'])) ?></td>
+                    <td><?= e(implode(', ', array_map(fn($p) => $p['name'] . ': ' . content_price($p['price']), goods_prices((string)$item['prices']))) ) ?></td>
                     <td>
                         <button class="status status-button tooltip" tooltip-position="right" tooltip-text="Нажмите, чтобы выбрать другой статус" type="button" data-status-menu data-id="<?= (int)$item['id'] ?>" data-current="<?= e((string)$item['status']) ?>" data-color="<?= e($meta['color']) ?>" aria-haspopup="menu" aria-expanded="false"><i></i> <?= e($meta['label']) ?></button>
                     </td>
@@ -172,8 +173,25 @@ dash_start('goods', 'Товары');
                 <input id="good-name" name="name" value="<?= e($formName) ?>" maxlength="255" required>
             </div>
             <div class="field">
-                <label for="good-price">Цена</label>
-                <input id="good-price" name="price" type="number" min="0" step="0.01" value="<?= e($formPrice) ?>">
+                <label for="good-discount">Общая скидка товара, %</label>
+                <input id="good-discount" name="discount" type="number" min="0" max="100" step="0.01" value="<?= e((string)$formDiscount) ?>" placeholder="0">
+                <p class="hint">Применяется ко всем вариантам цены дополнительно к индивидуальной скидке варианта. Скидки складываются, максимум — 100%.</p>
+            </div>
+            <div class="field">
+                <span class="field-label">Варианты цены</span>
+                <input type="hidden" name="prices" id="good-prices-json" value="<?= e(json_encode($formPrices, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>">
+                <div class="price-editor" data-price-editor>
+<?php foreach ($formPrices as $priceIndex => $priceItem): ?>
+                    <div class="price-editor-row" data-price-row>
+                        <input aria-label="Название варианта" data-price-name value="<?= e($priceItem['name']) ?>" placeholder="Например, 1d">
+                        <input aria-label="Цена" data-price-value type="number" min="0" max="9999999999.99" step="0.01" value="<?= e((string)$priceItem['price']) ?>" placeholder="Цена, ₽">
+                        <input aria-label="Скидка в процентах" data-price-discount type="number" min="0" max="100" step="0.01" value="<?= e((string)$priceItem['discount']) ?>" placeholder="Скидка, %">
+                        <button type="button" class="btn-secondary btn-danger" data-price-remove>Удалить</button>
+                    </div>
+<?php endforeach; ?>
+                </div>
+                <button type="button" class="btn-secondary" data-price-add>+ Добавить цену</button>
+                <p class="hint">Название (например, 1d), цена и скидка в процентах. Скидка рассчитывается от указанной цены.</p>
             </div>
             <div class="field">
                 <label for="good-status">Статус</label>

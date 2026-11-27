@@ -47,13 +47,14 @@ function schema_definition(): array
             ],
         ],
         'goods' => [
-            'CREATE TABLE IF NOT EXISTS goods (id SERIAL PRIMARY KEY, status TEXT NOT NULL DEFAULT \'undetected\', image TEXT NOT NULL DEFAULT \'\', name TEXT NOT NULL DEFAULT \'\', description TEXT NOT NULL DEFAULT \'\', price NUMERIC(12,2) NOT NULL DEFAULT 0, purchase JSONB NOT NULL DEFAULT \'{"type":"none","url":""}\'::jsonb, hidden BOOLEAN NOT NULL DEFAULT FALSE, create_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())',
+            'CREATE TABLE IF NOT EXISTS goods (id SERIAL PRIMARY KEY, status TEXT NOT NULL DEFAULT \'undetected\', image TEXT NOT NULL DEFAULT \'\', name TEXT NOT NULL DEFAULT \'\', description TEXT NOT NULL DEFAULT \'\', discount NUMERIC(5,2) NOT NULL DEFAULT 0, prices JSONB NOT NULL DEFAULT \'[{"name":"1d","price":0,"discount":0}]\'::jsonb, purchase JSONB NOT NULL DEFAULT \'{"type":"none","url":""}\'::jsonb, hidden BOOLEAN NOT NULL DEFAULT FALSE, create_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())',
             [
                 'status' => 'TEXT NOT NULL DEFAULT \'undetected\'',
                 'image' => 'TEXT NOT NULL DEFAULT \'\'',
                 'name' => 'TEXT NOT NULL DEFAULT \'\'',
                 'description' => 'TEXT NOT NULL DEFAULT \'\'',
-                'price' => 'NUMERIC(12,2) NOT NULL DEFAULT 0',
+                'discount' => 'NUMERIC(5,2) NOT NULL DEFAULT 0',
+                'prices' => "JSONB NOT NULL DEFAULT '[{\"name\":\"1d\",\"price\":0,\"discount\":0}]'::jsonb",
                 'purchase' => 'JSONB NOT NULL DEFAULT \'{"type":"none","url":""}\'::jsonb',
                 'hidden' => 'BOOLEAN NOT NULL DEFAULT FALSE',
                 'create_at' => 'TIMESTAMPTZ NOT NULL DEFAULT NOW()',
@@ -78,5 +79,14 @@ function ensure_schema(PDO $pdo): void
         foreach ($columns as $column => $type) {
             if (!isset($existing[$table][$column])) $pdo->exec('ALTER TABLE "' . $table . '" ADD COLUMN IF NOT EXISTS "' . $column . '" ' . $type);
         }
+    }
+    // One-time migration from legacy numeric price to structured JSON prices.
+    $goodsColumns = $existing['goods'] ?? [];
+    if (isset($goodsColumns['price']) && !isset($goodsColumns['prices'])) {
+        $pdo->exec("ALTER TABLE goods ADD COLUMN IF NOT EXISTS prices JSONB NOT NULL DEFAULT '[{\"name\":\"1d\",\"price\":0,\"discount\":0}]'::jsonb");
+        $pdo->exec("UPDATE goods SET prices = jsonb_build_array(jsonb_build_object('name','1d','price',price,'discount',0))");
+        $pdo->exec('ALTER TABLE goods DROP COLUMN price');
+    } elseif (isset($goodsColumns['price'])) {
+        $pdo->exec('ALTER TABLE goods DROP COLUMN price');
     }
 }

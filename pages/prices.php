@@ -8,7 +8,7 @@ $error = null;
 
 try {
     $goods = db()->query(
-        'SELECT id, status, image, name, description, price, purchase, create_at FROM goods WHERE hidden = FALSE ORDER BY create_at DESC, id DESC'
+        'SELECT id, status, image, name, description, prices, discount, purchase, create_at FROM goods WHERE hidden = FALSE ORDER BY create_at DESC, id DESC'
     )->fetchAll();
 } catch (Throwable $e) {
     error_log('Public prices page error: ' . $e->getMessage());
@@ -47,17 +47,20 @@ try {
 <?php endif; ?>
                     </div>
                 </div>
-                <?php $dailyPrice = (float)$good['price']; ?>
-                <div class="product-price-row" data-daily-price="<?= e((string)$dailyPrice) ?>">
-                    <span class="product-price" data-total-price><?= e(content_price($dailyPrice)) ?></span>
+                <?php $priceOptions = goods_prices((string)$good['prices']); $firstPrice = $priceOptions[0]; $productDiscount = (float)($good['discount'] ?? 0); $totalDiscount = min(100, (float)$firstPrice['discount'] + $productDiscount); ?>
+                <div class="product-price-row" data-product-discount="<?= e((string)$productDiscount) ?>" data-price-options="<?= e(json_encode($priceOptions, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>">
+                    <div class="product-price-stack">
+                        <span class="product-discount" data-discount<?= $totalDiscount > 0 ? '' : ' hidden' ?>>-<?= e((string)$totalDiscount) ?>%</span>
+                        <span class="product-price" data-total-price><?= e(content_price((float)$firstPrice['price'] * (1 - $totalDiscount / 100))) ?></span>
+                    </div>
                     <span class="product-price-separator">/</span>
                     <div class="duration-picker">
                         <button class="duration-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" data-duration-trigger>
                             <span data-duration-value>1d</span>
                         </button>
                         <div class="duration-menu" role="listbox" aria-label="Срок действия подписки" data-duration-menu hidden>
-                            <?php foreach (['1d' => 1, '3d' => 3, '7d' => 7, '30d' => 30] as $durationLabel => $days): ?>
-                                <button type="button" role="option" aria-selected="<?= $days === 1 ? 'true' : 'false' ?>" data-days="<?= $days ?>" data-label="<?= e($durationLabel) ?>"><?= e($durationLabel) ?></button>
+                            <?php foreach ($priceOptions as $priceIndex => $priceOption): ?>
+                                <button type="button" role="option" aria-selected="<?= $priceIndex === 0 ? 'true' : 'false' ?>" data-price-index="<?= $priceIndex ?>" data-label="<?= e($priceOption['name']) ?>"><?= e($priceOption['name']) ?></button>
                             <?php endforeach; ?>
                         </div>
                     </div>

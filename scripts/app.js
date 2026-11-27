@@ -523,7 +523,7 @@ document.addEventListener('click', function (e) {
 })();
 
 
-// ---------- Выбор срока подписки в карточке товара ----------
+// ---------- Выбор варианта цены в карточке товара ----------
 (function () {
   function closeMenus(except) {
     document.querySelectorAll('[data-duration-menu]').forEach(function (menu) {
@@ -533,45 +533,74 @@ document.addEventListener('click', function (e) {
       if (trigger) trigger.setAttribute('aria-expanded', 'false');
     });
   }
-
+  function money(value) {
+    return (Number.isInteger(value) ? value.toLocaleString('ru-RU') : value.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2})) + ' ₽';
+  }
   document.addEventListener('click', function (event) {
     var trigger = event.target.closest('[data-duration-trigger]');
     if (trigger) {
-      var picker = trigger.closest('.duration-picker');
-      var menu = picker && picker.querySelector('[data-duration-menu]');
+      var picker = trigger.closest('.duration-picker'), menu = picker && picker.querySelector('[data-duration-menu]');
       if (!menu) return;
-      var opening = menu.hidden;
-      closeMenus(menu);
-      menu.hidden = !opening;
-      trigger.setAttribute('aria-expanded', opening ? 'true' : 'false');
-      return;
+      var opening = menu.hidden; closeMenus(menu); menu.hidden = !opening;
+      trigger.setAttribute('aria-expanded', opening ? 'true' : 'false'); return;
     }
-
-    var option = event.target.closest('.duration-menu [data-days]');
+    var option = event.target.closest('.duration-menu [data-price-index]');
     if (option) {
-      var menu = option.closest('[data-duration-menu]');
-      var picker = menu.closest('.duration-picker');
-      var row = picker.closest('.product-price-row');
-      var days = Number(option.getAttribute('data-days'));
-      var label = option.getAttribute('data-label');
-      var dailyPrice = Number(row.getAttribute('data-daily-price'));
-      var price = row.querySelector('[data-total-price]');
-      var value = picker.querySelector('[data-duration-value]');
-      value.textContent = label;
-      menu.querySelectorAll('[data-days]').forEach(function (item) {
-        item.setAttribute('aria-selected', item === option ? 'true' : 'false');
-      });
-      var total = dailyPrice * days;
-      price.textContent = (Number.isInteger(total) ? total.toLocaleString('ru-RU') : total.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2})) + ' ₽';
-      menu.hidden = true;
-      picker.querySelector('[data-duration-trigger]').setAttribute('aria-expanded', 'false');
-      return;
+      var menu = option.closest('[data-duration-menu]'), picker = menu.closest('.duration-picker');
+      var row = picker.closest('.product-price-row'), options = [];
+      try { options = JSON.parse(row.getAttribute('data-price-options') || '[]'); } catch (e) {}
+      var selected = options[Number(option.getAttribute('data-price-index'))];
+      if (!selected) return;
+      var optionDiscount = Number(selected.discount) || 0;
+      var productDiscount = Number(row.getAttribute('data-product-discount')) || 0;
+      var discount = Math.min(100, optionDiscount + productDiscount);
+      var total = Number(selected.price) * (1 - discount / 100);
+      row.querySelector('[data-total-price]').textContent = money(total);
+      var discountEl = row.querySelector('[data-discount]');
+      discountEl.hidden = discount <= 0;
+      discountEl.textContent = '-' + discount + '%';
+      picker.querySelector('[data-duration-value]').textContent = selected.name;
+      menu.querySelectorAll('[data-price-index]').forEach(function (item) { item.setAttribute('aria-selected', item === option ? 'true' : 'false'); });
+      menu.hidden = true; picker.querySelector('[data-duration-trigger]').setAttribute('aria-expanded', 'false'); return;
     }
-
     if (!event.target.closest('.duration-picker')) closeMenus(null);
   });
-
-  document.addEventListener('keydown', function (event) {
-    if (event.key === 'Escape') closeMenus(null);
-  });
+  document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closeMenus(null); });
 })();
+
+// ---------- Редактор JSON цен товара ----------
+(function () {
+  var editor = document.querySelector('[data-price-editor]');
+  if (!editor) return;
+  var hidden = document.getElementById('good-prices-json');
+  function sync() {
+    var items = [];
+    editor.querySelectorAll('[data-price-row]').forEach(function (row) {
+      items.push({
+        name: row.querySelector('[data-price-name]').value.trim(),
+        price: row.querySelector('[data-price-value]').value,
+        discount: row.querySelector('[data-price-discount]').value || 0
+      });
+    });
+    hidden.value = JSON.stringify(items);
+  }
+  function bind(row) {
+    row.querySelectorAll('input').forEach(function (input) { input.addEventListener('input', sync); });
+    row.querySelector('[data-price-remove]').addEventListener('click', function () {
+      if (editor.querySelectorAll('[data-price-row]').length > 1) row.remove();
+      sync();
+    });
+  }
+  editor.querySelectorAll('[data-price-row]').forEach(bind);
+  var add = document.querySelector('[data-price-add]');
+  if (add) add.addEventListener('click', function () {
+    var row = document.createElement('div');
+    row.className = 'price-editor-row'; row.setAttribute('data-price-row', '');
+    row.innerHTML = '<input aria-label="Название варианта" data-price-name placeholder="Например, 30d"><input aria-label="Цена" data-price-value type="number" min="0" step="0.01" placeholder="Цена, ₽"><input aria-label="Скидка в процентах" data-price-discount type="number" min="0" max="100" step="0.01" value="0" placeholder="Скидка, %"><button type="button" class="btn-secondary btn-danger" data-price-remove>Удалить</button>';
+    editor.appendChild(row); bind(row); sync(); row.querySelector('[data-price-name]').focus();
+  });
+  var form = editor.closest('form');
+  if (form) form.addEventListener('submit', sync);
+})();
+
+

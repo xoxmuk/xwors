@@ -23,6 +23,31 @@ function news_first_title(array $data): string
     return '';
 }
 
+
+/** goods.prices JSONB: [{name, price, discount}] */
+function goods_prices(?string $json): array
+{
+    $decoded = json_decode((string)$json, true);
+    // Legacy compatibility while deployments migrate.
+    if (!is_array($decoded)) {
+        $legacy = is_numeric($json) ? (float)$json : 0;
+        return [['name' => '1d', 'price' => max(0, $legacy), 'discount' => 0]];
+    }
+    $items = [];
+    foreach ($decoded as $item) {
+        if (!is_array($item)) continue;
+        $name = trim((string)($item['name'] ?? ''));
+        $price = $item['price'] ?? null;
+        $discount = $item['discount'] ?? 0;
+        if ($name === '' || !is_numeric($price) || !is_numeric($discount)) continue;
+        $price = (float)$price; $discount = (float)$discount;
+        if (!is_finite($price) || $price < 0 || $price > 9999999999.99) continue;
+        if (!is_finite($discount) || $discount < 0 || $discount > 100) $discount = 0;
+        $items[] = ['name' => mb_substr($name, 0, 40), 'price' => round($price, 2), 'discount' => round($discount, 2)];
+    }
+    return $items ?: [['name' => '1d', 'price' => 0, 'discount' => 0]];
+}
+
 function goods_statuses(): array
 {
     return ['undetected' => ['label' => 'Undetected', 'color' => 'lime'], 'detected' => ['label' => 'Detected', 'color' => 'red'], 'updating' => ['label' => 'Updating', 'color' => 'orange']];
@@ -282,7 +307,7 @@ function content_clean_node(DOMNode $node): void
             }
             foreach (iterator_to_array($child->attributes) as $attr) {
                 $name = strtolower($attr->name);
-                if (in_array($name, ['tooltip-text', 'tooltip-position', 'class'], true)) continue; // handled below
+                if (in_array($name, ['tooltip-text', 'tooltip-position', 'class', 'style'], true)) continue; // handled below
                 if ($tag === 'div' && $name === 'devider-text') continue;
                 if (!in_array($name, CONTENT_HTML_TAGS[$tag], true)) { $child->removeAttribute($attr->name); continue; }
                 if (($name === 'href' || $name === 'src') && !content_safe_url($attr->value, $name === 'src')) $child->removeAttribute($attr->name);
@@ -296,25 +321,34 @@ function content_clean_node(DOMNode $node): void
             $requestedClasses = preg_split('/\\s+/', trim($child->getAttribute('class'))) ?: [];
             $safeDivClass = '';
             $deviderText = '';
+            if ($tag !== 'div') $safeDivClass = implode(' ', array_slice(array_filter($requestedClasses, static fn($c) => (bool)preg_match('/^[a-zA-Z][a-zA-Z0-9_-]{0,40}$/', $c)), 0, 12));
             if ($tag === 'div') {
                 // Keep only the supported layout classes. A divider may be aligned with
                 // "devider left" or "devider right"; arbitrary classes are discarded.
-                $allowedDivClasses = ['center', 'left', 'right', 'devider'];
-                $safeClasses = array_values(array_intersect($requestedClasses, $allowedDivClasses));
+                $safeClasses = array_values(array_filter($requestedClasses, static fn($c) => (bool)preg_match('/^[a-zA-Z][a-zA-Z0-9_-]{0,40}$/', $c)));
                 if (in_array('devider', $safeClasses, true)) {
                     $alignment = in_array('left', $safeClasses, true) ? 'left'
                         : (in_array('right', $safeClasses, true) ? 'right' : '');
                     $safeDivClass = 'devider' . ($alignment !== '' ? ' ' . $alignment : '');
                     $deviderText = mb_substr(trim($child->getAttribute('devider-text')), 0, 160);
-                } elseif (count($safeClasses) === 1) {
-                    $safeDivClass = $safeClasses[0];
-                }
+                } else { $safeDivClass = implode(' ', array_slice($safeClasses, 0, 12)); }
             }
             $child->removeAttribute('class');
             $child->removeAttribute('tooltip-text');
             $child->removeAttribute('tooltip-position');
             $child->removeAttribute('devider-text');
             if ($safeDivClass !== '') $child->setAttribute('class', $safeDivClass);
+            // Safe inline styling: allow presentation properties only; reject URLs, expressions and markup.
+            $style = $child->getAttribute('style');
+            $safeStyles = [];
+            $allowedStyles = ['color','background-color','border','border-color','border-radius','padding','padding-top','padding-right','padding-bottom','padding-left','margin','margin-top','margin-bottom','font-size','font-weight','font-style','text-align','text-decoration','display','gap','width','max-width','opacity','box-shadow'];
+            foreach (explode(';', $style) as $declaration) {
+                if (!str_contains($declaration, ':')) continue;
+                [$property, $value] = array_map('trim', explode(':', $declaration, 2));
+                if (in_array(strtolower($property), $allowedStyles, true) && $value !== '' && !preg_match('/url\s*\(|expression|[<>]|javascript/i', $value) && strlen($value) <= 120) $safeStyles[] = strtolower($property) . ':' . $value;
+            }
+            if ($safeStyles) $child->setAttribute('style', implode(';', $safeStyles));
+
             if (str_starts_with($safeDivClass, 'devider') && $deviderText !== '') {
                 $child->setAttribute('devider-text', $deviderText);
                 // The divider is authored as an empty div. Put the label into the DOM

@@ -1,0 +1,11 @@
+Options -Indexes
+
+<FilesMatch "^\.(?!well-known/)" >
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(?:lib|pages|\.git)(?:/|$) - [F,L,NC]
+    RewriteRule ^(?:README\.md|package\.json|vercel\.json|router\.php)$ - [F,L,NC]
+</IfModule>

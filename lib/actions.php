@@ -168,12 +168,25 @@ function handle_action(string $action): void
                 $id = (int)($_POST['id'] ?? 0); $name = trim((string)($_POST['name'] ?? '')); $description = trim((string)($_POST['description'] ?? '')); $status = (string)($_POST['status'] ?? 'undetected');
                 if (!isset(goods_statuses()[$status])) $status = 'undetected';
                 $hidden = isset($_POST['hidden']);
-                $priceRaw = str_replace(',', '.', trim((string)($_POST['price'] ?? '0')));
-                if ($priceRaw === '' || !is_numeric($priceRaw) || !is_finite((float)$priceRaw) || (float)$priceRaw < 0 || (float)$priceRaw > 9999999999.99) {
-                    redirect('/admin/dashboard/goods?' . ($id > 0 ? 'edit=' . $id . '&' : 'new=1&') . 'error=price');
+                $discountRaw = str_replace(',', '.', trim((string)($_POST['discount'] ?? '0')));
+                if (!is_numeric($discountRaw) || !is_finite((float)$discountRaw) || (float)$discountRaw < 0 || (float)$discountRaw > 100) redirect('/admin/dashboard/goods?' . ($id > 0 ? 'edit=' . $id . '&' : 'new=1&') . 'error=price');
+                $productDiscount = round((float)$discountRaw, 2);
+                $pricesRaw = (string)($_POST['prices'] ?? '[]');
+                $pricesInput = json_decode($pricesRaw, true);
+                $prices = [];
+                if (!is_array($pricesInput) || !$pricesInput) redirect('/admin/dashboard/goods?' . ($id > 0 ? 'edit=' . $id . '&' : 'new=1&') . 'error=price');
+                foreach ($pricesInput as $priceItem) {
+                    if (!is_array($priceItem)) continue;
+                    $priceName = trim((string)($priceItem['name'] ?? ''));
+                    $priceRaw = str_replace(',', '.', trim((string)($priceItem['price'] ?? '')));
+                    $discountRaw = str_replace(',', '.', trim((string)($priceItem['discount'] ?? '0')));
+                    if ($priceName === '' || mb_strlen($priceName) > 40 || !is_numeric($priceRaw) || !is_finite((float)$priceRaw) || (float)$priceRaw < 0 || (float)$priceRaw > 9999999999.99 || !is_numeric($discountRaw) || !is_finite((float)$discountRaw) || (float)$discountRaw < 0 || (float)$discountRaw > 100) {
+                        redirect('/admin/dashboard/goods?' . ($id > 0 ? 'edit=' . $id . '&' : 'new=1&') . 'error=price');
+                    }
+                    $prices[] = ['name' => $priceName, 'price' => round((float)$priceRaw, 2), 'discount' => round((float)$discountRaw, 2)];
                 }
-                $price = round((float)$priceRaw, 2);
-                $image = ''; $oldImage = '';
+                if (!$prices) redirect('/admin/dashboard/goods?error=price');
+                $pricesJson = json_encode($prices, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
                 if ($id > 0) { $stmt = db()->prepare('SELECT image FROM goods WHERE id = :id'); $stmt->execute([':id' => $id]); $existing = $stmt->fetchColumn(); if ($existing === false) redirect('/admin/dashboard/goods?error=notfound'); $oldImage = (string)$existing; }
                 // image: '__keep__' keeps the stored value, '' removes it, otherwise a hashed /assets/goods path or an http(s) URL
                 $imageInput = trim((string)($_POST['image'] ?? '__keep__'));
@@ -184,12 +197,12 @@ function handle_action(string $action): void
                 if (isset($buy['error'])) redirect('/admin/dashboard/goods?' . ($id > 0 ? 'edit=' . $id . '&' : 'new=1&') . 'error=buy&msg=' . rawurlencode($buy['error']));
                 $purchaseJson = json_encode(['type' => $buy['type'], 'url' => $buy['url']], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
                 if ($id > 0) {
-                    $stmt = db()->prepare('UPDATE goods SET status = :status, image = :image, name = :name, description = :description, price = :price, purchase = CAST(:purchase AS jsonb), hidden = CAST(:hidden AS boolean), updated_at = NOW() WHERE id = :id');
-                    $stmt->execute([':status' => $status, ':image' => $image, ':name' => $name, ':description' => $description, ':price' => $price, ':purchase' => $purchaseJson, ':hidden' => $hidden ? 1 : 0, ':id' => $id]);
+                    $stmt = db()->prepare('UPDATE goods SET status = :status, image = :image, name = :name, description = :description, prices = CAST(:prices AS jsonb), discount = :discount, purchase = CAST(:purchase AS jsonb), hidden = CAST(:hidden AS boolean), updated_at = NOW() WHERE id = :id');
+                    $stmt->execute([':status' => $status, ':image' => $image, ':name' => $name, ':description' => $description, ':prices' => $pricesJson, ':discount' => $productDiscount, ':purchase' => $purchaseJson, ':hidden' => $hidden ? 1 : 0, ':id' => $id]);
                     if ($oldImage !== $image) content_cleanup_images(db(), [$oldImage]);
                 } else {
-                    $stmt = db()->prepare('INSERT INTO goods (status, image, name, description, price, purchase, hidden) VALUES (:status, :image, :name, :description, :price, CAST(:purchase AS jsonb), CAST(:hidden AS boolean)) RETURNING id');
-                    $stmt->execute([':status' => $status, ':image' => $image, ':name' => $name, ':description' => $description, ':price' => $price, ':purchase' => $purchaseJson, ':hidden' => $hidden ? 1 : 0]); $id = (int)$stmt->fetchColumn();
+                    $stmt = db()->prepare('INSERT INTO goods (status, image, name, description, prices, discount, purchase, hidden) VALUES (:status, :image, :name, :description, CAST(:prices AS jsonb), :discount, CAST(:purchase AS jsonb), CAST(:hidden AS boolean)) RETURNING id');
+                    $stmt->execute([':status' => $status, ':image' => $image, ':name' => $name, ':description' => $description, ':prices' => $pricesJson, ':discount' => $productDiscount, ':purchase' => $purchaseJson, ':hidden' => $hidden ? 1 : 0]); $id = (int)$stmt->fetchColumn();
                 }
                 redirect('/admin/dashboard/goods?edit=' . $id . '&saved=1');
 
