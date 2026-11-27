@@ -140,11 +140,7 @@ dash_start('goods', 'Товары');
 
         <div class="field">
             <span class="field-label">Иконка товара</span>
-            <button type="button" class="btn-secondary icon-type-toggle" data-icon-type-toggle aria-expanded="false">Выбрать тип иконки</button>
-            <div class="icon-type-options" data-icon-type-options hidden>
-                <button type="button" class="btn-secondary" data-icon-upload>Загрузить</button>
-                <button type="button" class="btn-secondary" data-icon-url-toggle>URL</button>
-            </div>
+            <button type="button" class="btn-secondary icon-type-toggle" data-icon-upload>Загрузить изображение</button>
             <div class="media-box single" data-uploader="single" data-folder="goods" data-max-bytes="2097152" data-csrf="<?= e($csrf) ?>">
                 <input type="hidden" name="image" value="<?= $formImage !== '' ? '__keep__' : '' ?>" data-value>
                 <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" hidden data-file>
@@ -161,10 +157,6 @@ dash_start('goods', 'Товары');
                 <button type="button" class="btn-secondary btn-danger media-remove" data-remove<?= $formImage === '' ? ' hidden' : '' ?>>Удалить</button>
             </div>
             <span class="upload-error" data-error hidden role="alert"></span>
-            <div class="field" data-url-field<?= ($formImage !== '' && !str_starts_with($formImage, 'data:') && !str_starts_with($formImage, '/')) ? '' : ' hidden' ?>>
-                <label for="good-image-url" class="sub-label">Ссылка на картинку <span class="info-tip tooltip" tabindex="0" tooltip-text="Вставьте прямую HTTPS-ссылку на изображение.">?</span></label>
-                <input id="good-image-url" name="image_url" value="<?= ($formImage !== '' && !str_starts_with($formImage, 'data:') && !str_starts_with($formImage, '/')) ? e($formImage) : '' ?>" placeholder="https://example.com/image.png" data-url>
-            </div>
         </div>
 
         <div class="form-grid">
@@ -180,6 +172,8 @@ dash_start('goods', 'Товары');
             <div class="field">
                 <span class="field-label">Варианты цены</span>
                 <input type="hidden" name="prices" id="good-prices-json" value="<?= e(json_encode($formPrices, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>">
+                <button type="button" class="btn-secondary price-toggle" data-price-toggle aria-expanded="true">Свернуть список цен</button>
+                <div class="price-editor-scroll" data-price-scroll>
                 <div class="price-editor" data-price-editor>
 <?php foreach ($formPrices as $priceIndex => $priceItem): ?>
                     <div class="price-editor-row" data-price-row>
@@ -189,6 +183,7 @@ dash_start('goods', 'Товары');
                         <button type="button" class="btn-secondary btn-danger" data-price-remove>Удалить</button>
                     </div>
 <?php endforeach; ?>
+                </div>
                 </div>
                 <button type="button" class="btn-secondary" data-price-add>+ Добавить цену</button>
                 <p class="hint">Название (например, 1d), цена и скидка в процентах. Скидка рассчитывается от указанной цены.</p>
@@ -201,15 +196,9 @@ dash_start('goods', 'Товары');
 <?php endforeach; ?>
                 </select>
             </div>
-            <div class="field">
-                <span class="field-label">Видимость</span>
-                <label class="checkbox-row"><input type="checkbox" name="hidden" value="1"<?= $formHidden ? ' checked' : '' ?>> Скрыть товар <span class="info-tip tooltip" tabindex="0" tooltip-text="Скрытый товар не показывается на странице «Покупка». Позже можно опубликовать одним кликом в списке.">?</span></label>
-            </div>
-        </div>
-
-        <div class="field buy-field" data-buy>
+        <div class="field buy-field buy-field-right" data-buy>
             <span class="field-label">Кнопка «Купить» <span class="info-tip tooltip" tabindex="0" tooltip-text="Куда попадёт посетитель после нажатия на кнопку «Купить» на странице товара.">?</span></span>
-            <div class="form-grid">
+            <div class="buy-options">
                 <select name="buy_type" aria-label="Куда ведёт кнопка" data-buy-type>
 <?php foreach (goods_buy_types() as $key => $label): ?>
                     <option value="<?= e($key) ?>"<?= $formBuyType === $key ? ' selected' : '' ?>><?= e($label) ?></option>
@@ -231,6 +220,13 @@ dash_start('goods', 'Товары');
                 <p class="buy-note" data-buy-panel="none"<?= $formBuyType === 'none' ? '' : ' hidden' ?>>Кнопка будет показана неактивной.</p>
             </div>
         </div>
+            <div class="field">
+                <span class="field-label">Видимость</span>
+                <label class="checkbox-row"><input type="checkbox" name="hidden" value="1"<?= $formHidden ? ' checked' : '' ?>> Скрыть товар <span class="info-tip tooltip" tabindex="0" tooltip-text="Скрытый товар не показывается на странице «Покупка». Позже можно опубликовать одним кликом в списке.">?</span></label>
+            </div>
+        </div>
+
+
 
         <div class="field">
             <label for="good-description">Описание</label>

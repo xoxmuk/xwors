@@ -890,3 +890,22 @@ h2 .info-tip, h3 .info-tip { vertical-align: 2px; }
   .price-editor-row { grid-template-columns: 1fr 1fr; }
   .price-editor-row [data-price-name] { grid-column: 1 / -1; }
 }
+
+
+/* Goods editor layout refinements */
+.price-editor-scroll {
+    max-height: 250px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 5px;
+    scrollbar-width: thin;
+}
+.price-editor-scroll[hidden] { display: none; }
+.price-toggle { align-self: flex-start; }
+.buy-field-right { grid-column: 2; }
+.buy-options { display: flex; flex-direction: column; gap: 8px; }
+.buy-options [data-buy-panel] { width: 100%; }
+.buy-options .buy-note { margin: 0; }
+@media (max-width: 640px) {
+    .buy-field-right { grid-column: 1 / -1; }
+}

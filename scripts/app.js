@@ -593,6 +593,16 @@ document.addEventListener('click', function (e) {
   }
   editor.querySelectorAll('[data-price-row]').forEach(bind);
   var add = document.querySelector('[data-price-add]');
+  var toggle = document.querySelector('[data-price-toggle]');
+  var scroll = document.querySelector('[data-price-scroll]');
+  if (toggle && scroll) {
+    toggle.addEventListener('click', function () {
+      var collapsed = !scroll.hidden;
+      scroll.hidden = collapsed;
+      toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      toggle.textContent = collapsed ? 'Развернуть список цен' : 'Свернуть список цен';
+    });
+  }
   if (add) add.addEventListener('click', function () {
     var row = document.createElement('div');
     row.className = 'price-editor-row'; row.setAttribute('data-price-row', '');
