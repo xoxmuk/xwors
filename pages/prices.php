@@ -52,7 +52,7 @@ try {
                 <div class="product-price"><?= e(content_price((string)$good['price'])) ?></div>
 <?php $purchase = goods_purchase((string)$good['purchase']); $buyType = $purchase['type']; $buyUrl = $purchase['url']; ?>
 <?php if ($buyType === 'none' || $buyUrl === ''): ?>
-                <span class="btn btn-disabled tooltip" aria-disabled="true" tabindex="0" data-tooltip="Способ покупки пока не указан">Купить</span>
+                <span class="btn btn-disabled tooltip" aria-disabled="true" tabindex="0" tooltip-text="Способ покупки пока не указан">Купить</span>
 <?php elseif ($buyType === 'page'): ?>
                 <a class="btn" href="<?= e($buyUrl) ?>">Купить</a>
 <?php else: ?>

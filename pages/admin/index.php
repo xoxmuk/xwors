@@ -10,7 +10,7 @@ try {
 } catch (Throwable $e) {
     error_log('Admin login page error: ' . $e->getMessage());
     http_response_code(503);
-    exit('Не удалось проверить авторизацию. Проверьте подключение к базе данных и AUTH_SECRET.');
+    exit('Не удалось выполнить вход. Попробуйте позже.');
 }
 
 $error = null;

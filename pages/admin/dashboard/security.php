@@ -26,7 +26,7 @@ dash_start('security', 'Безопасность');
 
 function tip(string $text): string
 {
-    return '<span class="info-tip tooltip" tabindex="0" role="note" data-tooltip="' . e($text) . '">?</span>';
+    return '<span class="info-tip tooltip" tabindex="0" role="note" tooltip-text="' . e($text) . '">?</span>';
 }
 ?>
 <section class="panel-card security-card">
@@ -35,7 +35,7 @@ function tip(string $text): string
             <h2>Двухэтапная авторизация <?= tip('После пароля при каждом новом входе нужно вводить одноразовый 6-значный код из приложения Google Authenticator, Aegis или другого TOTP-приложения.') ?></h2>
             <p>Дополнительная защита входа в админку.</p>
         </div>
-        <span class="security-pill <?= $enabled ? 'on' : 'off' ?> tooltip tip-left" tabindex="0" data-tooltip="<?= $enabled ? 'Вход в админку защищён кодом из приложения.' : 'Сейчас вход защищён только паролем.' ?>"><i></i><?= $enabled ? 'Включена' : 'Не включена' ?></span>
+        <span class="security-pill <?= $enabled ? 'on' : 'off' ?> tooltip" tooltip-position="left" tabindex="0" tooltip-text="<?= $enabled ? 'Вход в админку защищён кодом из приложения.' : 'Сейчас вход защищён только паролем.' ?>"><i></i><?= $enabled ? 'Включена' : 'Не включена' ?></span>
     </div>
 <?php if (isset($_GET['enabled'])): ?><p class="success-message flash">Двухэтапная авторизация успешно включена.</p><?php endif; ?>
 <?php if (isset($_GET['disabled'])): ?><p class="success-message flash">Двухэтапная авторизация отключена.</p><?php endif; ?>
@@ -58,7 +58,7 @@ function tip(string $text): string
     <div class="totp-layout">
         <div class="totp-side">
             <div id="totp-qr" class="totp-qr" data-qr="<?= e($otpauth) ?>" aria-label="QR-код для добавления в аутентификатор"></div>
-            <a class="totp-open tooltip" href="<?= e($otpauth) ?>" data-tooltip="Откроется установленное приложение-аутентификатор на этом устройстве">Открыть в приложении</a>
+            <a class="totp-open tooltip" href="<?= e($otpauth) ?>" tooltip-text="Откроется установленное приложение-аутентификатор на этом устройстве">Открыть в приложении</a>
         </div>
         <div class="totp-main">
             <div class="field-block">

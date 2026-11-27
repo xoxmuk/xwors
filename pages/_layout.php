@@ -27,7 +27,7 @@ function public_start(string $active, string $title): void {
     </nav>
     <section class="sidebar-bottom center col">
         <span>&copy; <?= date('Y') ?> XWorsClient</span>
-        <span class="sidebar-designer">Site designed by <a class="tooltip" href="https://t.me/ialonet" data-tooltip="In no way involved in the administration or management of the site.">@ialonet</a></span>
+        <span class="sidebar-designer">Site designed by <a class="tooltip" href="https://t.me/ialonet" tooltip-text="In no way involved in the administration or management of the site.">@ialonet</a></span>
     </section>
 </aside>
 <main class="main">

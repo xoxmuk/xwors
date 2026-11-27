@@ -124,13 +124,6 @@ function handle_action(string $action): void
             case 'save-news':
                 require_admin();
                 $id = (int)($_POST['id'] ?? 0); $version = trim((string)($_POST['version'] ?? '')); $hidden = isset($_POST['hidden']);
-                $formToken = trim((string)($_POST['form_token'] ?? ''));
-                if ($formToken !== '') {
-                    $pdo = db(); $stmt = $pdo->prepare("SELECT 1 FROM submitted_forms WHERE token = :token LIMIT 1");
-                    $stmt->execute([':token' => $formToken]);
-                    if ($stmt->fetchColumn() !== false) redirect($id > 0 ? '/admin/dashboard/news?edit=' . $id . '&saved=1' : '/admin/dashboard/news?saved=1');
-                    $pdo->prepare('INSERT INTO submitted_forms (token) VALUES (:token) ON CONFLICT (token) DO NOTHING')->execute([':token' => $formToken]);
-                }
                 $blocks = []; $titles = $_POST['block_title'] ?? []; $descriptions = $_POST['block_description'] ?? [];
                 if (is_array($titles)) foreach ($titles as $index => $title) {
                     $title = trim((string)$title); $description = trim((string)($descriptions[$index] ?? ''));
@@ -142,6 +135,8 @@ function handle_action(string $action): void
                     $stmt = db()->prepare('SELECT data FROM news WHERE id = :id'); $stmt->execute([':id' => $id]); $existing = $stmt->fetchColumn();
                     if ($existing === false) redirect('/admin/dashboard/news?error=notfound');
                     $oldImages = news_data((string)$existing)['images'];
+                    // No image editor is exposed in this form yet: never discard saved image references.
+                    $images = $oldImages;
                 }
                 if ($version === '' && !$blocks) redirect('/admin/dashboard/news?error=empty');
                 $json = json_encode(['blocks' => $blocks, 'images' => $images], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
@@ -171,14 +166,13 @@ function handle_action(string $action): void
             case 'save-good':
                 require_admin();
                 $id = (int)($_POST['id'] ?? 0); $name = trim((string)($_POST['name'] ?? '')); $description = trim((string)($_POST['description'] ?? '')); $status = (string)($_POST['status'] ?? 'undetected');
-                $formToken = trim((string)($_POST['form_token'] ?? ''));
-                if ($formToken !== '') {
-                    $pdo = db(); $stmt = $pdo->prepare('SELECT 1 FROM submitted_forms WHERE token = :token LIMIT 1'); $stmt->execute([':token' => $formToken]);
-                    if ($stmt->fetchColumn() !== false) redirect($id > 0 ? '/admin/dashboard/goods?edit=' . $id . '&saved=1' : '/admin/dashboard/goods?saved=1');
-                    $pdo->prepare('INSERT INTO submitted_forms (token) VALUES (:token) ON CONFLICT (token) DO NOTHING')->execute([':token' => $formToken]);
-                }
                 if (!isset(goods_statuses()[$status])) $status = 'undetected';
-                $hidden = isset($_POST['hidden']); $priceRaw = str_replace(',', '.', trim((string)($_POST['price'] ?? '0'))); $price = is_numeric($priceRaw) ? max(0.0, (float)$priceRaw) : 0.0;
+                $hidden = isset($_POST['hidden']);
+                $priceRaw = str_replace(',', '.', trim((string)($_POST['price'] ?? '0')));
+                if ($priceRaw === '' || !is_numeric($priceRaw) || !is_finite((float)$priceRaw) || (float)$priceRaw < 0 || (float)$priceRaw > 9999999999.99) {
+                    redirect('/admin/dashboard/goods?' . ($id > 0 ? 'edit=' . $id . '&' : 'new=1&') . 'error=price');
+                }
+                $price = round((float)$priceRaw, 2);
                 $image = ''; $oldImage = '';
                 if ($id > 0) { $stmt = db()->prepare('SELECT image FROM goods WHERE id = :id'); $stmt->execute([':id' => $id]); $existing = $stmt->fetchColumn(); if ($existing === false) redirect('/admin/dashboard/goods?error=notfound'); $oldImage = (string)$existing; }
                 // image: '__keep__' keeps the stored value, '' removes it, otherwise a hashed /assets/goods path or an http(s) URL

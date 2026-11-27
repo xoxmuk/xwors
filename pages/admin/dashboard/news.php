@@ -83,7 +83,7 @@ dash_start('news', 'Новости');
                         <form method="post" action="/api/toggle-news" class="inline-form">
                             <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
                             <input type="hidden" name="id" value="<?= (int)$item['id'] ?>">
-                            <button class="badge badge-button tooltip tip-right <?= $item['hidden'] ? 'badge-muted' : 'badge-success' ?>" type="submit" data-tooltip="<?= $item['hidden'] ? 'Новость скрыта. Нажмите, чтобы опубликовать' : 'Новость видна посетителям. Нажмите, чтобы скрыть' ?>"><?= $item['hidden'] ? 'Скрыт' : 'Опубликован' ?></button>
+                            <button class="badge badge-button tooltip <?= $item['hidden'] ? 'badge-muted' : 'badge-success' ?>" tooltip-position="right" type="submit" tooltip-text="<?= $item['hidden'] ? 'Новость скрыта. Нажмите, чтобы опубликовать' : 'Новость видна посетителям. Нажмите, чтобы скрыть' ?>"><?= $item['hidden'] ? 'Скрыт' : 'Опубликован' ?></button>
                         </form>
                     </td>
                     <td class="actions-cell">
@@ -107,7 +107,7 @@ dash_start('news', 'Новости');
 <?php if ($showForm): ?>
 <section class="panel-card" id="news-form">
     <h2><?= $editing ? 'Редактировать новость #' . (int)$editing['id'] : 'Новая новость' ?></h2>
-    <p>Каждый блок — это заголовок и описание. Описание можно писать с HTML-разметкой; подсказку при наведении добавляет кнопка «+ Tooltip» или атрибут <code>data-tooltip="…"</code>.</p>
+    <p>Каждый блок — это заголовок и описание. Описание можно писать с HTML-разметкой; подсказку при наведении добавляет кнопка «+ Tooltip» или атрибут <code>tooltip-text="…"</code>.</p>
     <form method="post" action="/api/save-news" class="admin-form">
         <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
         <input type="hidden" name="id" value="<?= (int)($editing['id'] ?? 0) ?>">

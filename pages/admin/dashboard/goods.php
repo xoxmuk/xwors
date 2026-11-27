@@ -52,6 +52,7 @@ dash_start('goods', 'Товары');
 <?php if (isset($_GET['error'])): ?>
     <p class="form-error flash"><?php
         if ($_GET['error'] === 'name') echo 'Укажите название товара.';
+        elseif ($_GET['error'] === 'price') echo 'Укажите цену от 0 до 9 999 999 999,99 ₽.';
         elseif ($_GET['error'] === 'buy') echo e(mb_substr((string)($_GET['msg'] ?? ''), 0, 200) ?: 'Проверьте, куда должна вести кнопка «Купить».');
         else echo 'Не удалось сохранить товар. Проверьте данные и попробуйте снова.';
     ?></p>
@@ -99,13 +100,13 @@ dash_start('goods', 'Товары');
                     <td><?= e((string)$item['name']) ?: '—' ?></td>
                     <td><?= e(content_price((string)$item['price'])) ?></td>
                     <td>
-                        <button class="status status-button tooltip tip-right" data-tooltip="Нажмите, чтобы выбрать другой статус" type="button" data-status-menu data-id="<?= (int)$item['id'] ?>" data-current="<?= e((string)$item['status']) ?>" data-color="<?= e($meta['color']) ?>" aria-haspopup="menu" aria-expanded="false"><i></i> <?= e($meta['label']) ?></button>
+                        <button class="status status-button tooltip" tooltip-position="right" tooltip-text="Нажмите, чтобы выбрать другой статус" type="button" data-status-menu data-id="<?= (int)$item['id'] ?>" data-current="<?= e((string)$item['status']) ?>" data-color="<?= e($meta['color']) ?>" aria-haspopup="menu" aria-expanded="false"><i></i> <?= e($meta['label']) ?></button>
                     </td>
                     <td>
                         <form method="post" action="/api/toggle-good" class="inline-form">
                             <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
                             <input type="hidden" name="id" value="<?= (int)$item['id'] ?>">
-                            <button class="badge badge-button tooltip tip-right <?= $item['hidden'] ? 'badge-muted' : 'badge-success' ?>" type="submit" data-tooltip="<?= $item['hidden'] ? 'Товар скрыт. Нажмите, чтобы опубликовать' : 'Товар виден посетителям. Нажмите, чтобы скрыть' ?>"><?= $item['hidden'] ? 'Скрыт' : 'Опубликован' ?></button>
+                            <button class="badge badge-button tooltip <?= $item['hidden'] ? 'badge-muted' : 'badge-success' ?>" tooltip-position="right" type="submit" tooltip-text="<?= $item['hidden'] ? 'Товар скрыт. Нажмите, чтобы опубликовать' : 'Товар виден посетителям. Нажмите, чтобы скрыть' ?>"><?= $item['hidden'] ? 'Скрыт' : 'Опубликован' ?></button>
                         </form>
                     </td>
                     <td><?= e(admin_goods_date($item['create_at'])) ?></td>
@@ -158,7 +159,7 @@ dash_start('goods', 'Товары');
                 <button type="button" class="btn-secondary btn-danger media-remove" data-remove<?= $formImage === '' ? ' hidden' : '' ?>>Удалить</button>
             </div>
             <span class="upload-error" data-error hidden role="alert"></span>
-            <label for="good-image-url" class="sub-label">Или ссылка на картинку <span class="info-tip tooltip" tabindex="0" data-tooltip="Если загрузка файла недоступна (например, хостинг только для чтения), вставьте прямую ссылку на изображение.">?</span></label>
+            <label for="good-image-url" class="sub-label">Или ссылка на картинку <span class="info-tip tooltip" tabindex="0" tooltip-text="Если загрузка файла недоступна (например, хостинг только для чтения), вставьте прямую ссылку на изображение.">?</span></label>
             <input id="good-image-url" name="image_url" value="<?= ($formImage !== '' && !str_starts_with($formImage, 'data:') && !str_starts_with($formImage, '/')) ? e($formImage) : '' ?>" placeholder="https://example.com/image.png" data-url>
         </div>
 
@@ -181,12 +182,12 @@ dash_start('goods', 'Товары');
             </div>
             <div class="field">
                 <span class="field-label">Видимость</span>
-                <label class="checkbox-row"><input type="checkbox" name="hidden" value="1"<?= $formHidden ? ' checked' : '' ?>> Скрыть товар <span class="info-tip tooltip" tabindex="0" data-tooltip="Скрытый товар не показывается на странице «Покупка». Позже можно опубликовать одним кликом в списке.">?</span></label>
+                <label class="checkbox-row"><input type="checkbox" name="hidden" value="1"<?= $formHidden ? ' checked' : '' ?>> Скрыть товар <span class="info-tip tooltip" tabindex="0" tooltip-text="Скрытый товар не показывается на странице «Покупка». Позже можно опубликовать одним кликом в списке.">?</span></label>
             </div>
         </div>
 
         <div class="field buy-field" data-buy>
-            <span class="field-label">Кнопка «Купить» <span class="info-tip tooltip" tabindex="0" data-tooltip="Куда попадёт посетитель после нажатия на кнопку «Купить» на странице товара.">?</span></span>
+            <span class="field-label">Кнопка «Купить» <span class="info-tip tooltip" tabindex="0" tooltip-text="Куда попадёт посетитель после нажатия на кнопку «Купить» на странице товара.">?</span></span>
             <div class="form-grid">
                 <select name="buy_type" aria-label="Куда ведёт кнопка" data-buy-type>
 <?php foreach (goods_buy_types() as $key => $label): ?>

@@ -85,10 +85,10 @@ function content_valid_image(string $value): bool
 {
     $value = trim($value);
     if ($value === '') return false;
-    if (str_starts_with($value, 'data:image/')) return (bool)preg_match('#^data:image/(png|jpe?g|gif|webp|avif);base64,#i', $value);
+    if (str_starts_with($value, 'data:image/')) return strlen($value) <= 2 * 1024 * 1024 && (bool)preg_match('#^data:image/(png|jpe?g|gif|webp|avif);base64,[A-Za-z0-9+/]+=*$#i', $value);
     if (str_starts_with($value, '/')) return content_local_image($value) && is_file(dirname(__DIR__) . $value);
     $scheme = strtolower((string)parse_url($value, PHP_URL_SCHEME));
-    return in_array($scheme, ['http', 'https'], true) && filter_var($value, FILTER_VALIDATE_URL) !== false;
+    return $scheme === 'https' && filter_var($value, FILTER_VALIDATE_URL) !== false;
 }
 
 const CONTENT_MAX_PIXELS = 8000;
@@ -199,7 +199,10 @@ function content_safe_url(string $value, bool $image): bool
     if ($value === '') return false;
     if ($value[0] === '#') return !$image;
     if ($value[0] === '/') return !str_starts_with($value, '//');
-    if (preg_match('#^https?://#i', $value)) return filter_var($value, FILTER_VALIDATE_URL) !== false;
+    if (preg_match('#^https?://#i', $value)) {
+        if ($image && !str_starts_with(strtolower($value), 'https://')) return false;
+        return filter_var($value, FILTER_VALIDATE_URL) !== false;
+    }
     return !$image && (bool)preg_match('#^mailto:[^\s]+$#i', $value);
 }
 
@@ -218,18 +221,23 @@ function content_clean_node(DOMNode $node): void
             }
             foreach (iterator_to_array($child->attributes) as $attr) {
                 $name = strtolower($attr->name);
-                if ($name === 'data-tooltip' || $name === 'class') continue; // handled below
+                if (in_array($name, ['tooltip-text', 'tooltip-position', 'class'], true)) continue; // handled below
                 if (!in_array($name, CONTENT_HTML_TAGS[$tag], true)) { $child->removeAttribute($attr->name); continue; }
                 if (($name === 'href' || $name === 'src') && !content_safe_url($attr->value, $name === 'src')) $child->removeAttribute($attr->name);
             }
-            // Tooltip: data-tooltip="…" (class="tooltip" is added automatically); no other classes are allowed
-            $tip = trim($child->getAttribute('data-tooltip'));
+            // Tooltip: tooltip-text="…" (class="tooltip" is added automatically); no other classes are allowed
+            $tip = trim($child->getAttribute('tooltip-text'));
+            $tipPosition = trim($child->getAttribute('tooltip-position'));
+            $validTipPositions = ['left-up', 'up', 'right-up', 'left', 'right', 'left-bottom', 'bottom', 'right-bottom'];
+            if (!in_array($tipPosition, $validTipPositions, true)) $tipPosition = 'up';
             if (preg_match('/^.{0,300}/su', $tip, $m)) $tip = $m[0];
             $child->removeAttribute('class');
-            $child->removeAttribute('data-tooltip');
+            $child->removeAttribute('tooltip-text');
+            $child->removeAttribute('tooltip-position');
             if ($tip !== '' && !in_array($tag, ['img', 'br', 'hr'], true)) {
                 $child->setAttribute('class', 'tooltip');
-                $child->setAttribute('data-tooltip', $tip);
+                $child->setAttribute('tooltip-text', $tip);
+                $child->setAttribute('tooltip-position', $tipPosition);
                 $child->setAttribute('tabindex', '0');
             }
             if ($tag === 'a') { $child->setAttribute('rel', 'noopener noreferrer nofollow'); $child->setAttribute('target', '_blank'); }
@@ -249,10 +257,10 @@ function content_render_html(string $text): string
     if (!str_contains($text, '<') || !class_exists('DOMDocument')) return nl2br(e($text));
     $previous = libxml_use_internal_errors(true);
     $doc = new DOMDocument('1.0', 'UTF-8');
-    $doc->loadHTML('<?xml encoding="UTF-8"><div>' . $text . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    $doc->loadHTML('<?xml encoding="UTF-8"><!doctype html><html><body>' . $text . '</body></html>', LIBXML_HTML_NODEFDTD);
     libxml_clear_errors();
     libxml_use_internal_errors($previous);
-    $root = $doc->getElementsByTagName('div')->item(0);
+    $root = $doc->getElementsByTagName('body')->item(0);
     if (!$root) return nl2br(e($text));
     content_clean_node($root);
     $out = '';

@@ -406,7 +406,7 @@ document.addEventListener('click', function (e) {
   if (!area) return;
   var start = area.selectionStart, end = area.selectionEnd;
   var text = area.value.slice(start, end) || 'текст';
-  var open = '<span class="tooltip" data-tooltip="';
+  var open = '<span class="tooltip" tooltip-text="';
   area.setRangeText(open + '">' + text + '</span>', start, end, 'end');
   area.focus();
   var caret = start + open.length;

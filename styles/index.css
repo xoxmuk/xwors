@@ -74,8 +74,9 @@ a:hover { color: var(--white); }
 
 /* Tooltip */
 .tooltip { position: relative; }
+.tooltip[tooltip-position="left-up"], .tooltip[tooltip-position="up"], .tooltip[tooltip-position="right-up"], .tooltip[tooltip-position="left"], .tooltip[tooltip-position="right"], .tooltip[tooltip-position="left-bottom"], .tooltip[tooltip-position="bottom"], .tooltip[tooltip-position="right-bottom"] { --tooltip-positioned: 1; }
 .tooltip::after {
-    content: attr(data-tooltip);
+    content: attr(tooltip-text);
     position: absolute;
     bottom: calc(100% + 8px);
     left: 50%;
@@ -107,6 +108,27 @@ a:hover { color: var(--white); }
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
+
+/* Tooltip placement */
+.tooltip[tooltip-position="left-up"]::after { left: 0; right: auto; bottom: calc(100% + 8px); top: auto; transform: translateY(4px); text-align: left; }
+.tooltip[tooltip-position="up"]::after { left: 50%; right: auto; bottom: calc(100% + 8px); top: auto; transform: translate(-50%, 4px); }
+.tooltip[tooltip-position="right-up"]::after { left: auto; right: 0; bottom: calc(100% + 8px); top: auto; transform: translateY(4px); text-align: right; }
+.tooltip[tooltip-position="left"]::after { left: auto; right: calc(100% + 8px); top: 50%; bottom: auto; transform: translate(4px, -50%); text-align: right; }
+.tooltip[tooltip-position="right"]::after { left: calc(100% + 8px); right: auto; top: 50%; bottom: auto; transform: translate(-4px, -50%); text-align: left; }
+.tooltip[tooltip-position="left-bottom"]::after { left: 0; right: auto; top: calc(100% + 8px); bottom: auto; transform: translateY(-4px); text-align: left; }
+.tooltip[tooltip-position="bottom"]::after { left: 50%; right: auto; top: calc(100% + 8px); bottom: auto; transform: translate(-50%, -4px); }
+.tooltip[tooltip-position="right-bottom"]::after { left: auto; right: 0; top: calc(100% + 8px); bottom: auto; transform: translateY(-4px); text-align: right; }
+.tooltip[tooltip-position]:hover::after,
+.tooltip[tooltip-position]:focus-visible::after { transform: translate(0, 0); }
+.tooltip[tooltip-position="up"]:hover::after,
+.tooltip[tooltip-position="up"]:focus-visible::after,
+.tooltip[tooltip-position="bottom"]:hover::after,
+.tooltip[tooltip-position="bottom"]:focus-visible::after { transform: translate(-50%, 0); }
+.tooltip[tooltip-position="left"]:hover::after,
+.tooltip[tooltip-position="left"]:focus-visible::after,
+.tooltip[tooltip-position="right"]:hover::after,
+.tooltip[tooltip-position="right"]:focus-visible::after { transform: translate(0, -50%); }
+
 
 /* Utilities */
 .flex { display: flex; gap: 8px; }
@@ -633,6 +655,7 @@ h2.tooltip { width: fit-content; }
 .news-text blockquote { padding: 4px 0 4px 14px; border-left: 3px solid #333; }
 .news-text pre, .news-text code { padding: 2px 6px; border-radius: 6px; background: #101010; color: #ddd; font-size: 13px; }
 .news-text pre { padding: 12px; overflow-x: auto; }
+.news-image { display: block; max-width: 100%; height: auto; margin: 12px 0; border-radius: 12px; }
 .news-text img { max-width: 100%; height: auto; margin: 10px 0; border-radius: 12px; }
 .news-text hr { border: 0; border-top: 1px solid var(--line); }
 .news-text table { border-collapse: collapse; }
@@ -644,7 +667,7 @@ h2.tooltip { width: fit-content; }
 .field-tools { display: flex; align-items: center; gap: 10px; }
 .field-tools .hint { margin-top: 0 !important; }
 
-/* Tooltip placement helpers (for elements inside scrollable tables / card corners) */
+/* Legacy helper selectors retained for existing custom markup. Prefer tooltip-position. */
 .tooltip.tip-right::after {
     bottom: auto; top: 50%; left: calc(100% + 8px);
     transform: translateY(-50%) translateX(-4px); text-align: left;

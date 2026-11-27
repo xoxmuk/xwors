@@ -28,6 +28,9 @@ try {
             <span class="label"><?= (string)$item['version'] !== '' ? e((string)$item['version']) : 'Новость' ?></span>
             <time class="news-date" datetime="<?= e((string)$item['create_at']) ?>"><?= e(date('d.m.Y', strtotime((string)$item['create_at']))) ?></time>
         </div>
+<?php foreach ($data['images'] as $newsImage): ?>
+<?php if (content_valid_image((string)$newsImage)): ?><img class="news-image" src="<?= e((string)$newsImage) ?>" alt="" loading="lazy" decoding="async"><?php endif; ?>
+<?php endforeach; ?>
 <?php foreach ($data['blocks'] as $block): ?>
 <?php if ($block['title'] !== ''): ?><h2><?= e($block['title']) ?></h2><?php endif; ?>
 <?php if ($block['description'] !== ''): ?><div class="news-text"><?= content_render_html($block['description']) ?></div><?php endif; ?>

@@ -6,6 +6,27 @@ PHP 8+ / PostgreSQL.
 - `XWORS_DATABASE_URL` — PostgreSQL URL (`postgresql://user:pass@host:5432/db?sslmode=require`).
 - `AUTH_SECRET` — минимум 32 случайных символа: `php -r 'echo bin2hex(random_bytes(32));'`
 
+## Tooltip в HTML новостей
+
+Для подсказки используйте `tooltip-text`, а сторону задавайте через `tooltip-position`:
+
+```html
+<span tooltip-text="Текст подсказки" tooltip-position="right">Наведи на меня</span>
+```
+
+Допустимые значения `tooltip-position`: `left-up`, `up` (по умолчанию), `right-up`, `left`, `right`, `left-bottom`, `bottom`, `right-bottom`.
+
+## Развёртывание на VPS
+
+Рекомендуется указывать корнем сайта каталог `public/` (если вы создаёте отдельную публичную сборку) либо настроить веб-сервер так, чтобы PHP-файлы проекта, `.env`, `lib/`, `pages/` и `README.md` не обслуживались напрямую. Для текущей структуры используйте `router.php` как front controller и запретите прямой доступ к скрытым/служебным файлам и каталогам `lib`, `pages` и `api` (кроме единой точки входа `api/index.php`). Никогда не размещайте `.env` в публичном docroot.
+
+Пример `.env.example`:
+
+```dotenv
+XWORS_DATABASE_URL=postgresql://user:password@localhost:5432/database?sslmode=require
+AUTH_SECRET=replace-with-at-least-32-random-characters
+```
+
 ## Локальный запуск
 ```bash
 cp .env.example .env   # заполнить значения

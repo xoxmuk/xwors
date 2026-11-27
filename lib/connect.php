@@ -28,10 +28,6 @@ function db(): PDO
 function schema_definition(): array
 {
     return [
-        'submitted_forms' => [
-            'CREATE TABLE IF NOT EXISTS submitted_forms (token VARCHAR(64) PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())',
-            ['created_at' => 'TIMESTAMPTZ NOT NULL DEFAULT NOW()'],
-        ],
         'users' => [
             'CREATE TABLE IF NOT EXISTS users (uuid UUID PRIMARY KEY, "key" VARCHAR(32) NOT NULL UNIQUE, expires_at TIMESTAMPTZ NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())',
             ['expires_at' => 'TIMESTAMPTZ NULL', 'created_at' => 'TIMESTAMPTZ NOT NULL DEFAULT NOW()'],
