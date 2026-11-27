@@ -20,7 +20,7 @@ public_start('prices', 'Покупка');
                     <div class="label">Product Information</div>
                     <div>
                         <p>Information</p>
-                        <p class="tooltip" data-tooltip="In no way involved in the administration or management of the site.">Interactive Information</p>
+                        <p class="tooltip" data-tooltip="Interactive Information">Interactive Information</p>
                     </div>
                 </div>
                 <a class="btn" href="#">Buy</a>
@@ -35,7 +35,7 @@ public_start('prices', 'Покупка');
                     <div class="label">Product Information</div>
                     <div>
                         <p>Information</p>
-                        <p class="tooltip" data-tooltip="In no way involved in the administration or management of the site.">Interactive Information</p>
+                        <p class="tooltip" data-tooltip="Interactive Information">Interactive Information</p>
                     </div>
                 </div>
                 <a class="btn" href="#">Buy</a>
