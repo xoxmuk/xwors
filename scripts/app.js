@@ -74,16 +74,16 @@ document.addEventListener('submit', function (e) {
     return 'Ошибка загрузки (' + status + ').';
   }
 
-  // Проверяем, что браузер вообще может прочитать файл как картинку (битые файлы отсекаем до отправки)
+  // Мягкая проверка: отсекаем только то, что браузер точно не может декодировать.
+  // createImageBitmap не зависит от CSP (img-src), в отличие от <img src="blob:...">.
+  // Если API недоступно или формат браузер не знает (AVIF и др.) — решение за сервером.
   function verifyImage(file) {
-    return new Promise(function (resolve) {
-      if (file.type === 'image/avif' || !window.URL || !URL.createObjectURL) { resolve(true); return; }
-      var url = URL.createObjectURL(file);
-      var img = new Image();
-      img.onload = function () { URL.revokeObjectURL(url); resolve(img.naturalWidth > 0 && img.naturalHeight > 0); };
-      img.onerror = function () { URL.revokeObjectURL(url); resolve(false); };
-      img.src = url;
-    });
+    if (file.type === 'image/avif' || typeof window.createImageBitmap !== 'function') return Promise.resolve(true);
+    return window.createImageBitmap(file).then(function (bmp) {
+      var ok = bmp.width > 0 && bmp.height > 0;
+      if (bmp.close) bmp.close();
+      return ok;
+    }).catch(function () { return false; });
   }
 
   function sendFile(box, file, onProgress) {
