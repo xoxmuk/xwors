@@ -26,14 +26,15 @@ function db(): PDO
 
 function ensure_schema(PDO $pdo): void
 {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS submitted_forms (token VARCHAR(64) PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
+    // Legacy table from an earlier form-deduplication approach; no longer used.
+    $pdo->exec('DROP TABLE IF EXISTS submitted_forms');
     $pdo->exec('CREATE TABLE IF NOT EXISTS users (uuid UUID PRIMARY KEY, "key" VARCHAR(32) NOT NULL UNIQUE, expires_at TIMESTAMPTZ NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())');
     $pdo->exec("CREATE TABLE IF NOT EXISTS admins (login VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, \"2fa\" JSONB NOT NULL DEFAULT '{\"enabled\":0,\"secret\":null}'::jsonb)");
     $pdo->exec("ALTER TABLE admins ADD COLUMN IF NOT EXISTS \"2fa\" JSONB NOT NULL DEFAULT '{\"enabled\":0,\"secret\":null}'::jsonb");
     $pdo->exec("CREATE TABLE IF NOT EXISTS news (id SERIAL PRIMARY KEY, version TEXT NOT NULL DEFAULT '', data JSONB NOT NULL DEFAULT '{\"blocks\":[],\"images\":[]}'::jsonb, hidden BOOLEAN NOT NULL DEFAULT FALSE, create_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
-    $pdo->exec("ALTER TABLE news ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT FALSE");
-    $pdo->exec("ALTER TABLE news ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()");
+    $pdo->exec('ALTER TABLE news ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT FALSE');
+    $pdo->exec('ALTER TABLE news ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()');
     $pdo->exec("CREATE TABLE IF NOT EXISTS goods (id SERIAL PRIMARY KEY, status TEXT NOT NULL DEFAULT 'undetected', image TEXT NOT NULL DEFAULT '', name TEXT NOT NULL DEFAULT '', description TEXT NOT NULL DEFAULT '', price NUMERIC(12,2) NOT NULL DEFAULT 0, hidden BOOLEAN NOT NULL DEFAULT FALSE, create_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
-    $pdo->exec("ALTER TABLE goods ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT FALSE");
-    $pdo->exec("ALTER TABLE goods ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()");
+    $pdo->exec('ALTER TABLE goods ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT FALSE');
+    $pdo->exec('ALTER TABLE goods ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()');
 }
