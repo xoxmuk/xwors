@@ -644,6 +644,27 @@ h2.tooltip { width: fit-content; }
 
 /* News text (HTML allowed) */
 .news-text { color: var(--muted); overflow-wrap: anywhere; line-height: 1.6; }
+.news-text .center { text-align: center; }
+.news-text .left { text-align: left; }
+.news-text .right { text-align: right; }
+.news-text .devider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.3;
+}
+.news-text .devider::before,
+.news-text .devider::after {
+    content: "";
+    flex: 1 1 auto;
+    min-width: 12px;
+    border-top: 1px solid var(--line);
+}
+.news-text .devider:not([devider-text])::after { display: none; }
+.news-text .devider:not([devider-text]) { display: block; border-top: 1px solid var(--line); }
 .news-text > * + * { margin-top: 10px; }
 .news-text a { color: var(--text); text-decoration: underline; }
 .news-text a:hover { color: var(--white); }
@@ -754,3 +775,8 @@ h2 .info-tip, h3 .info-tip { vertical-align: 2px; }
     .totp-main .security-form { max-width: none; }
     .security-form-row { flex-direction: column; }
 }
+
+/* Clickable UUID / KEY values */
+.users-table .copy-value { cursor: copy; user-select: text; transition: color .18s ease; }
+.users-table .copy-value:hover { color: var(--white); }
+.users-table .copy-value.copied { color: #8bd49a; }

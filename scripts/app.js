@@ -397,6 +397,59 @@ document.addEventListener('submit', function (e) {
   } catch (err) {}
 })();
 
+
+// ---------- Копирование UUID и KEY по нажатию на значение ----------
+(function () {
+  function copyText(value) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(value);
+    }
+    return new Promise(function (resolve, reject) {
+      var area = document.createElement('textarea');
+      area.value = value;
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      try {
+        var ok = document.execCommand('copy');
+        area.remove();
+        ok ? resolve() : reject(new Error('copy failed'));
+      } catch (err) {
+        area.remove();
+        reject(err);
+      }
+    });
+  }
+
+  function activate(target) {
+    var value = target.getAttribute('data-copy-value');
+    if (!value) return;
+    copyText(value).then(function () {
+      var previous = target.getAttribute('data-copy-label') || target.textContent;
+      target.setAttribute('data-copy-label', previous);
+      target.classList.add('copied');
+      target.setAttribute('aria-label', 'Скопировано');
+      window.setTimeout(function () {
+        target.classList.remove('copied');
+        target.removeAttribute('aria-label');
+      }, 1100);
+    }).catch(function () {});
+  }
+
+  document.addEventListener('click', function (event) {
+    var target = event.target.closest('[data-copy-value]');
+    if (target) activate(target);
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    var target = event.target.closest('[data-copy-value]');
+    if (!target) return;
+    event.preventDefault();
+    activate(target);
+  });
+})();
+
 // ---------- Кнопка «+ Tooltip» в описании новости ----------
 document.addEventListener('click', function (e) {
   var btn = e.target.closest('[data-insert-tooltip]');

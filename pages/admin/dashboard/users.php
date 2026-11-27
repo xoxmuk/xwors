@@ -67,13 +67,12 @@ function format_date(?string $value, string $empty): string
             <tbody>
 <?php foreach ($users as $i => $u): ?>
                 <tr<?= $u['uuid'] === $created ? ' class="row-new"' : '' ?>>
-                    <td class="uuid-cell"><?= e((string)$u['uuid']) ?></td>
-                    <td class="key-cell" id="key-<?= $i ?>"><?= e((string)$u['access_key']) ?></td>
+                    <td class="uuid-cell copy-value" role="button" tabindex="0" data-copy-value="<?= e((string)$u['uuid']) ?>" title="Нажмите, чтобы скопировать UUID"><?= e((string)$u['uuid']) ?></td>
+                    <td class="key-cell copy-value" role="button" tabindex="0" data-copy-value="<?= e((string)$u['access_key']) ?>" title="Нажмите, чтобы скопировать KEY"><?= e((string)$u['access_key']) ?></td>
                     <td><?= e(format_date($u['created_at'], '—')) ?></td>
                     <td><?= e(format_date($u['expires_at'], 'Бессрочно')) ?></td>
                     <td class="actions-cell">
                         <div class="actions">
-                            <button type="button" class="btn-secondary" data-copy="#key-<?= $i ?>">Копировать</button>
                             <form method="post" action="/api/delete-user" class="inline-form" data-confirm="Удалить этого пользователя? Действие необратимо.">
                                 <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
                                 <input type="hidden" name="uuid" value="<?= e((string)$u['uuid']) ?>">

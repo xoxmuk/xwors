@@ -222,6 +222,7 @@ function content_clean_node(DOMNode $node): void
             foreach (iterator_to_array($child->attributes) as $attr) {
                 $name = strtolower($attr->name);
                 if (in_array($name, ['tooltip-text', 'tooltip-position', 'class'], true)) continue; // handled below
+                if ($tag === 'div' && $name === 'devider-text') continue;
                 if (!in_array($name, CONTENT_HTML_TAGS[$tag], true)) { $child->removeAttribute($attr->name); continue; }
                 if (($name === 'href' || $name === 'src') && !content_safe_url($attr->value, $name === 'src')) $child->removeAttribute($attr->name);
             }
@@ -231,9 +232,18 @@ function content_clean_node(DOMNode $node): void
             $validTipPositions = ['left-up', 'up', 'right-up', 'left', 'right', 'left-bottom', 'bottom', 'right-bottom'];
             if (!in_array($tipPosition, $validTipPositions, true)) $tipPosition = 'up';
             if (preg_match('/^.{0,300}/su', $tip, $m)) $tip = $m[0];
+            $requestedClass = trim($child->getAttribute('class'));
+            $allowedDivClasses = ['center', 'left', 'right', 'devider'];
+            $safeDivClass = $tag === 'div' && in_array($requestedClass, $allowedDivClasses, true) ? $requestedClass : '';
+            $deviderText = $tag === 'div' && $safeDivClass === 'devider'
+                ? mb_substr(trim($child->getAttribute('devider-text')), 0, 160)
+                : '';
             $child->removeAttribute('class');
             $child->removeAttribute('tooltip-text');
             $child->removeAttribute('tooltip-position');
+            $child->removeAttribute('devider-text');
+            if ($safeDivClass !== '') $child->setAttribute('class', $safeDivClass);
+            if ($safeDivClass === 'devider' && $deviderText !== '') $child->setAttribute('devider-text', $deviderText);
             if ($tip !== '' && !in_array($tag, ['img', 'br', 'hr'], true)) {
                 $child->setAttribute('class', 'tooltip');
                 $child->setAttribute('tooltip-text', $tip);
