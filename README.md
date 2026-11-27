@@ -66,17 +66,17 @@ QR-код генерируется локально в браузере (`script
 В `/admin/dashboard/users` создаётся пользователь: случайный UUID v4 и случайный ключ из 32 символов (A-Z, a-z, 0-9); при совпадении с существующими генерация повторяется.
 
 ## Хранение картинок
-На VPS/локально файлы пишутся в `assets/news` и `assets/goods`. На Vercel при наличии `PUBLIC_BLOB_READ_WRITE_TOKEN` (либо стандартного `BLOB_READ_WRITE_TOKEN`) приложение автоматически сохраняет картинки в Vercel Blob (путь `xwors/news` или `xwors/goods`), а в базе хранит постоянный публичный URL. Добавьте `PUBLIC_BLOB_READ_WRITE_TOKEN` и `PUBLIC_BLOB_STORE_ID` в Project → Settings → Environment Variables после подключения Public Blob Store. `PUBLIC_BLOB_WEBHOOK_PUBLIC_KEY` оставьте заданным только если используете Blob Webhooks. Если токен не задан, загрузка на Vercel вернёт понятную ошибку; вместо файла можно использовать HTTPS URL.
+На VPS/локально файлы пишутся в `public/assets/news` и `public/assets/goods`. На Vercel при наличии `PUBLIC_BLOB_READ_WRITE_TOKEN` (либо стандартного `BLOB_READ_WRITE_TOKEN`) приложение автоматически сохраняет картинки в Vercel Blob (путь `xwors/news` или `xwors/goods`), а в базе хранит постоянный публичный URL. Добавьте `PUBLIC_BLOB_READ_WRITE_TOKEN` и `PUBLIC_BLOB_STORE_ID` в Project → Settings → Environment Variables после подключения Public Blob Store. `PUBLIC_BLOB_WEBHOOK_PUBLIC_KEY` оставьте заданным только если используете Blob Webhooks. Если токен не задан, загрузка на Vercel вернёт понятную ошибку; вместо файла можно использовать HTTPS URL.
 
 ## Таблица news
 `id`, `version`, `data` (JSONB: `{ "blocks": [{ "title", "description" }], "images": [...] }`), `hidden`, `create_at`, `updated_at`.
 
-Новости создаются и редактируются в `/admin/dashboard/news`. Картинки загружаются файлом (на VPS — в `assets/news/<hash>.<ext>`, на Vercel — в Blob) или добавляются ссылками. Видимость «Опубликован/Скрыт» меняется нажатием на неё в списке. Скрытые новости не выводятся на `/news`.
+Новости создаются и редактируются в `/admin/dashboard/news`. Картинки загружаются файлом (на VPS — в `public/assets/news/<hash>.<ext>`, на Vercel — в Blob) или добавляются ссылками. Видимость «Опубликован/Скрыт» меняется нажатием на неё в списке. Скрытые новости не выводятся на `/news`.
 
 ## Таблица goods
 `id`, `status`, `image`, `name`, `description`, `price`, `purchase`, `hidden`, `create_at`, `updated_at`.
 
-Товары создаются и редактируются в `/admin/dashboard/goods`. Иконка товара загружается в `assets/goods/<hash>.<ext>` (на Vercel — в Blob), выбирается из встроенных default-иконок или задаётся HTTPS URL. Статус и видимость («Опубликован/Скрыт») меняются нажатием в списке (логика видимости такая же, как у новостей), скрытые товары не выводятся на `/prices`.
+Товары создаются и редактируются в `/admin/dashboard/goods`. Иконка товара загружается в `public/assets/goods/<hash>.<ext>` (на Vercel — в Blob), если иконка не задана, используется встроенная Default-иконка из `public/assets/goods`; альтернативно можно задать HTTPS URL через кнопку «URL». Статус и видимость («Опубликован/Скрыт») меняются нажатием в списке (логика видимости такая же, как у новостей), скрытые товары не выводятся на `/prices`.
 
 Кнопка «Купить» (`purchase` — JSONB `{"type": "...", "url": "..."}`), `type`: `none` — неактивна, `telegram` (`@username` или `t.me/…`), `link` (внешняя ссылка) или `page` (страница сайта из `goods_buy_pages()`). Колонка `purchase` добавляется автоматически.
 

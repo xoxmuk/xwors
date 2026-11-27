@@ -142,12 +142,7 @@ dash_start('goods', 'Товары');
             <button type="button" class="btn-secondary icon-type-toggle" data-icon-type-toggle aria-expanded="false">Выбрать тип иконки</button>
             <div class="icon-type-options" data-icon-type-options hidden>
                 <button type="button" class="btn-secondary" data-icon-upload>Загрузить</button>
-                <button type="button" class="btn-secondary" data-icon-existing-toggle>Выбрать существующую</button>
                 <button type="button" class="btn-secondary" data-icon-url-toggle>URL</button>
-            </div>
-            <div class="icon-existing-options" data-icon-existing-options hidden>
-                <button type="button" class="icon-choice" data-icon-choice="/assets/goods/default_64.png"><img src="/assets/goods/default_64.png" alt=""><span>Default 64</span></button>
-                <button type="button" class="icon-choice" data-icon-choice="/assets/goods/default_1254.png"><img src="/assets/goods/default_1254.png" alt=""><span>Default 1254</span></button>
             </div>
             <div class="media-box single" data-uploader="single" data-folder="goods" data-max-bytes="2097152" data-csrf="<?= e($csrf) ?>">
                 <input type="hidden" name="image" value="<?= $formImage !== '' ? '__keep__' : '' ?>" data-value>
@@ -165,8 +160,10 @@ dash_start('goods', 'Товары');
                 <button type="button" class="btn-secondary btn-danger media-remove" data-remove<?= $formImage === '' ? ' hidden' : '' ?>>Удалить</button>
             </div>
             <span class="upload-error" data-error hidden role="alert"></span>
-            <label for="good-image-url" class="sub-label">Или ссылка на картинку <span class="info-tip tooltip" tabindex="0" tooltip-text="Если загрузка файла недоступна (например, хостинг только для чтения), вставьте прямую ссылку на изображение.">?</span></label>
-            <input id="good-image-url" name="image_url" value="<?= ($formImage !== '' && !str_starts_with($formImage, 'data:') && !str_starts_with($formImage, '/')) ? e($formImage) : '' ?>" placeholder="https://example.com/image.png" data-url>
+            <div class="field" data-url-field<?= ($formImage !== '' && !str_starts_with($formImage, 'data:') && !str_starts_with($formImage, '/')) ? '' : ' hidden' ?>>
+                <label for="good-image-url" class="sub-label">Ссылка на картинку <span class="info-tip tooltip" tabindex="0" tooltip-text="Вставьте прямую HTTPS-ссылку на изображение.">?</span></label>
+                <input id="good-image-url" name="image_url" value="<?= ($formImage !== '' && !str_starts_with($formImage, 'data:') && !str_starts_with($formImage, '/')) ? e($formImage) : '' ?>" placeholder="https://example.com/image.png" data-url>
+            </div>
         </div>
 
         <div class="form-grid">

@@ -2,8 +2,10 @@
 .env.*
 !.env.example
 .vercel
-/assets/news/*
-/assets/goods/*
-!/assets/news/.gitkeep
-!/assets/goods/.gitkeep
+/public/assets/news/*
+/public/assets/goods/*
+!/public/assets/news/.gitkeep
+!/public/assets/goods/.gitkeep
+!/public/assets/goods/default_64.png
+!/public/assets/goods/default_1254.png
 node_modules

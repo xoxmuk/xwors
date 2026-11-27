@@ -77,7 +77,7 @@ const CONTENT_IMAGE_FOLDERS = ['news', 'goods'];
 const CONTENT_IMAGE_TYPES = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp', 'image/avif' => 'avif'];
 const CONTENT_LOCAL_IMAGE = '#^/assets/(news|goods)/[a-f0-9]{64}\.(jpg|png|gif|webp|avif)$#';
 
-function content_assets_dir(string $folder): string { return dirname(__DIR__) . '/assets/' . $folder; }
+function content_assets_dir(string $folder): string { return dirname(__DIR__) . '/public/assets/' . $folder; }
 
 function content_local_image(string $value): bool { return (bool)preg_match(CONTENT_LOCAL_IMAGE, $value); }
 
@@ -88,7 +88,7 @@ function content_valid_image(string $value): bool
     if (str_starts_with($value, 'data:image/')) return strlen($value) <= 2 * 1024 * 1024 && (bool)preg_match('#^data:image/(png|jpe?g|gif|webp|avif);base64,[A-Za-z0-9+/]+=*$#i', $value);
     if (str_starts_with($value, '/')) {
         $defaultIcon = in_array($value, ['/assets/goods/default_64.png', '/assets/goods/default_1254.png'], true);
-        return ($defaultIcon || content_local_image($value)) && is_file(dirname(__DIR__) . $value);
+        return ($defaultIcon || content_local_image($value)) && is_file(dirname(__DIR__) . '/public' . $value);
     }
     $scheme = strtolower((string)parse_url($value, PHP_URL_SCHEME));
     return $scheme === 'https' && filter_var($value, FILTER_VALIDATE_URL) !== false;
@@ -114,7 +114,7 @@ function content_storage_readonly(string $dir): bool
 }
 
 /**
- * Validates an uploaded image, hashes its content (SHA-256) and stores it as assets/<folder>/<hash>.<ext>.
+ * Validates an uploaded image, hashes its content (SHA-256) and stores it as public/assets/<folder>/<hash>.<ext>.
  * Returns ['path' => '/assets/<folder>/<hash>.<ext>'] or ['error' => '<message>', 'code' => '<code>'].
  */
 function content_store_upload(array $file, string $folder, int $maxBytes): array
@@ -211,15 +211,15 @@ function content_store_upload(array $file, string $folder, int $maxBytes): array
 
     $dir = content_assets_dir($folder);
     if (content_storage_readonly($dir)) return $fail('readonly', 'Сервер работает в режиме «только чтение». Для Vercel добавьте PUBLIC_BLOB_READ_WRITE_TOKEN (Vercel Blob) или укажите URL изображения.');
-    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) return $fail('mkdir', 'Не удалось создать папку assets/' . $folder . '. Проверьте права на запись.');
-    if (!is_writable($dir)) return $fail('not_writable', 'Нет прав на запись в папку assets/' . $folder . '.');
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) return $fail('mkdir', 'Не удалось создать папку public/assets/' . $folder . '. Проверьте права на запись.');
+    if (!is_writable($dir)) return $fail('not_writable', 'Нет прав на запись в папку public/assets/' . $folder . '.');
 
     $name = $hash . '.' . CONTENT_IMAGE_TYPES[$mime];
     $target = $dir . '/' . $name;
     if (!is_file($target)) {
         $free = @disk_free_space($dir);
         if ($free !== false && $free < $size + 1048576) return $fail('disk_full', 'На сервере закончилось свободное место.');
-        if (!@move_uploaded_file($tmp, $target)) return $fail('move', 'Не удалось сохранить файл на сервере. Проверьте права на запись в assets/' . $folder . '.');
+        if (!@move_uploaded_file($tmp, $target)) return $fail('move', 'Не удалось сохранить файл на сервере. Проверьте права на запись в public/assets/' . $folder . '.');
     }
     if (!is_file($target) || (int)@filesize($target) <= 0) return $fail('verify', 'Файл сохранён с ошибкой. Повторите загрузку.');
     @chmod($target, 0644);
