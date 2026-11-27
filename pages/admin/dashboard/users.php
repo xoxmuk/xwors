@@ -21,9 +21,9 @@ function format_date(?string $value, string $empty): string
     return $value ? date('d.m.Y H:i', strtotime($value)) : $empty;
 }
 ?>
-<?php if ($created !== ''): ?><p class="success-message">Пользователь создан, ключ сгенерирован.</p><?php endif; ?>
-<?php if (isset($_GET['deleted'])): ?><p class="success-message">Пользователь удалён.</p><?php endif; ?>
-<?php if (($_GET['error'] ?? '') === 'date'): ?><p class="form-error">Некорректная дата окончания.</p><?php endif; ?>
+<?php if ($created !== ''): ?><p class="success-message flash">Пользователь создан, ключ сгенерирован.</p><?php endif; ?>
+<?php if (isset($_GET['deleted'])): ?><p class="success-message flash">Пользователь удалён.</p><?php endif; ?>
+<?php if (($_GET['error'] ?? '') === 'date'): ?><p class="form-error flash">Некорректная дата окончания.</p><?php endif; ?>
 
 <section class="panel-card">
     <h2>Создать пользователя</h2>

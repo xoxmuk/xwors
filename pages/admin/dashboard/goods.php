@@ -43,11 +43,11 @@ function admin_goods_date(?string $value): string
 
 dash_start('goods', 'Товары');
 ?>
-<?php if (isset($_GET['saved'])): ?><p class="success-message">Товар сохранён.</p><?php endif; ?>
-<?php if (isset($_GET['deleted'])): ?><p class="success-message">Товар удалён.</p><?php endif; ?>
-<?php if (isset($_GET['toggled'])): ?><p class="success-message">Данные товара обновлены.</p><?php endif; ?>
+<?php if (isset($_GET['saved'])): ?><p class="success-message flash">Товар сохранён.</p><?php endif; ?>
+<?php if (isset($_GET['deleted'])): ?><p class="success-message flash">Товар удалён.</p><?php endif; ?>
+<?php if (isset($_GET['toggled'])): ?><p class="success-message flash">Данные товара обновлены.</p><?php endif; ?>
 <?php if (isset($_GET['error'])): ?>
-    <p class="form-error"><?= $_GET['error'] === 'name' ? 'Укажите название товара.' : 'Не удалось сохранить товар. Проверьте данные и попробуйте снова.' ?></p>
+    <p class="form-error flash"><?= $_GET['error'] === 'name' ? 'Укажите название товара.' : 'Не удалось сохранить товар. Проверьте данные и попробуйте снова.' ?></p>
 <?php endif; ?>
 <?php if ($error): ?><p class="form-error"><?= e($error) ?></p><?php endif; ?>
 

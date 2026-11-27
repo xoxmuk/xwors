@@ -127,24 +127,18 @@ function handle_action(string $action): void
                     $pdo->prepare('INSERT INTO submitted_forms (token) VALUES (:token) ON CONFLICT (token) DO NOTHING')->execute([':token' => $formToken]);
                 }
                 $blocks = []; $titles = $_POST['block_title'] ?? []; $descriptions = $_POST['block_description'] ?? [];
-                $tooltips = $_POST['block_tooltip'] ?? [];
                 if (is_array($titles)) foreach ($titles as $index => $title) {
-                    $title = trim((string)$title); $description = trim((string)($descriptions[$index] ?? '')); $tooltip = trim((string)($tooltips[$index] ?? ''));
+                    $title = trim((string)$title); $description = trim((string)($descriptions[$index] ?? ''));
                     if ($title === '' && $description === '') continue;
-                    $blocks[] = ['title' => $title, 'description' => $description, 'tooltip' => $tooltip];
+                    $blocks[] = ['title' => $title, 'description' => $description];
                 }
                 $images = []; $oldImages = [];
                 if ($id > 0) {
                     $stmt = db()->prepare('SELECT data FROM news WHERE id = :id'); $stmt->execute([':id' => $id]); $existing = $stmt->fetchColumn();
                     if ($existing === false) redirect('/admin/dashboard/news?error=notfound');
-                    $oldImages = news_data((string)$existing)['images']; $keep = array_map('intval', (array)($_POST['keep_image'] ?? []));
-                    foreach ($oldImages as $index => $image) if (in_array($index, $keep, true)) $images[] = $image;
+                    $oldImages = news_data((string)$existing)['images'];
                 }
-                foreach ((array)($_POST['new_image'] ?? []) as $path) { $path = trim((string)$path); if (str_starts_with($path, '/assets/news/') && content_valid_image($path)) $images[] = $path; }
-                $urls = preg_split('/\r\n|\r|\n/', (string)($_POST['image_urls'] ?? '')) ?: [];
-                foreach ($urls as $url) { $url = trim($url); if ($url !== '' && !str_starts_with($url, '/') && content_valid_image($url)) $images[] = $url; }
-                $images = array_slice(array_values(array_unique($images)), 0, 12);
-                if ($version === '' && !$blocks && !$images) redirect('/admin/dashboard/news?error=empty');
+                if ($version === '' && !$blocks) redirect('/admin/dashboard/news?error=empty');
                 $json = json_encode(['blocks' => $blocks, 'images' => $images], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
                 if ($id > 0) {
                     $stmt = db()->prepare('UPDATE news SET version = :version, data = CAST(:data AS jsonb), hidden = CAST(:hidden AS boolean), updated_at = NOW() WHERE id = :id');
@@ -162,7 +156,12 @@ function handle_action(string $action): void
                 $pdo->prepare('DELETE FROM news WHERE id = :id')->execute([':id' => $id]);
                 if ($old !== false) content_cleanup_images($pdo, news_data((string)$old)['images']);
                 redirect('/admin/dashboard/news?deleted=1');
-            case 'toggle-news': require_admin(); db()->prepare('UPDATE news SET hidden = NOT hidden, updated_at = NOW() WHERE id = :id')->execute([':id' => (int)($_POST['id'] ?? 0)]); redirect('/admin/dashboard/news?toggled=1');
+            case 'toggle-news':
+                require_admin();
+                $stmt = db()->prepare('UPDATE news SET hidden = NOT hidden, updated_at = NOW() WHERE id = :id RETURNING hidden');
+                $stmt->execute([':id' => (int)($_POST['id'] ?? 0)]);
+                $nowHidden = $stmt->fetchColumn();
+                redirect('/admin/dashboard/news?toggled=' . ($nowHidden === false ? 'visible' : (filter_var($nowHidden, FILTER_VALIDATE_BOOLEAN) ? 'hidden' : 'visible')));
 
             case 'save-good':
                 require_admin();

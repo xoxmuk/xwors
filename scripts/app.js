@@ -334,3 +334,29 @@ document.addEventListener('submit', function (e) {
   window.addEventListener('scroll', close, true);
 })();
 
+// ---------- Уведомления админки: всплывают справа сверху и исчезают сами ----------
+(function () {
+  var items = document.querySelectorAll('.admin-main .flash');
+  if (!items.length) return;
+  var box = document.createElement('div');
+  box.className = 'toasts';
+  box.setAttribute('role', 'status');
+  document.body.appendChild(box);
+  items.forEach(function (el) {
+    box.appendChild(el);
+    var timer = setTimeout(hide, el.classList.contains('form-error') ? 7000 : 4000);
+    function hide() {
+      clearTimeout(timer);
+      el.classList.add('leaving');
+      setTimeout(function () { el.remove(); }, 300);
+    }
+    el.addEventListener('click', hide);
+  });
+  // Убираем служебные параметры, чтобы после обновления страницы уведомление не появилось снова
+  try {
+    var url = new URL(window.location.href);
+    ['saved', 'deleted', 'toggled', 'created', 'error', 'enabled', 'disabled'].forEach(function (k) { url.searchParams.delete(k); });
+    window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+  } catch (err) {}
+})();
+

@@ -29,16 +29,9 @@ try {
             <time class="news-date" datetime="<?= e((string)$item['create_at']) ?>"><?= e(date('d.m.Y', strtotime((string)$item['create_at']))) ?></time>
         </div>
 <?php foreach ($data['blocks'] as $block): ?>
-<?php if ($block['title'] !== ''): ?><h2<?= ($block['tooltip'] ?? '') !== '' ? ' class="tooltip" tabindex="0" data-tooltip="' . e($block['tooltip']) . '"' : '' ?>><?= e($block['title']) ?></h2><?php endif; ?>
-<?php if ($block['description'] !== ''): ?><p><?= nl2br(e($block['description'])) ?></p><?php endif; ?>
+<?php if ($block['title'] !== ''): ?><h2><?= e($block['title']) ?></h2><?php endif; ?>
+<?php if ($block['description'] !== ''): ?><div class="news-text"><?= content_render_html($block['description']) ?></div><?php endif; ?>
 <?php endforeach; ?>
-<?php if ($data['images']): ?>
-        <div class="news-images">
-<?php foreach ($data['images'] as $image): ?>
-            <img src="<?= e($image) ?>" alt="" loading="lazy">
-<?php endforeach; ?>
-        </div>
-<?php endif; ?>
     </article>
 <?php endforeach; ?>
 <?php endif; ?>

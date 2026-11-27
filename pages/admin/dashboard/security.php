@@ -28,9 +28,9 @@ dash_start('security', 'Безопасность');
     <h2>Двухэтапная авторизация</h2>
     <p>Подключи Google Authenticator или совместимое приложение Aegis. После включения при каждом новом входе после пароля потребуется одноразовый шестизначный код.</p>
     <div class="security-status"><span>Статус защиты</span><strong class="<?= $enabled ? 'security-on' : 'security-off' ?>"><?= $enabled ? 'Включена' : 'Не включена' ?></strong></div>
-<?php if (isset($_GET['enabled'])): ?><p class="success-message">Двухэтапная авторизация успешно включена.</p><?php endif; ?>
-<?php if (isset($_GET['disabled'])): ?><p class="success-message">Двухэтапная авторизация отключена.</p><?php endif; ?>
-<?php if (isset($_GET['error'])): ?><p class="form-error">Код неверный или устарел. Проверь время на телефоне и попробуй снова.</p><?php endif; ?>
+<?php if (isset($_GET['enabled'])): ?><p class="success-message flash">Двухэтапная авторизация успешно включена.</p><?php endif; ?>
+<?php if (isset($_GET['disabled'])): ?><p class="success-message flash">Двухэтапная авторизация отключена.</p><?php endif; ?>
+<?php if (isset($_GET['error'])): ?><p class="form-error flash">Код неверный или устарел. Проверь время на телефоне и попробуй снова.</p><?php endif; ?>
 
 <?php if ($enabled): ?>
     <h3>Отключение 2FA</h3>

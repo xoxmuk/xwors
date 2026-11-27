@@ -610,3 +610,31 @@ h2.tooltip { width: fit-content; }
 .status-menu button[data-color="blue"] { --color: #2196f3; }
 .status-menu button[data-color="purple"] { --color: #9003fc; }
 .status-menu button i { width: 7px; height: 7px; border-radius: 50%; background: var(--color); }
+
+/* Admin notifications: toasts that don't shift the layout */
+.toasts { position: fixed; top: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; width: min(360px, calc(100vw - 32px)); pointer-events: none; }
+.toasts .flash {
+    margin: 0; padding: 13px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; pointer-events: auto;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .55); animation: toast-in .25s ease; transition: opacity .3s ease, transform .3s ease;
+}
+.toasts .flash.leaving { opacity: 0; transform: translateX(16px); }
+@keyframes toast-in { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
+
+/* News text (HTML allowed) */
+.news-text { color: var(--muted); overflow-wrap: anywhere; line-height: 1.6; }
+.news-text > * + * { margin-top: 10px; }
+.news-text a { color: var(--text); text-decoration: underline; }
+.news-text a:hover { color: var(--white); }
+.news-text strong, .news-text b { color: var(--text); }
+.news-text ul, .news-text ol { padding-left: 22px; }
+.news-text ul { list-style: disc; }
+.news-text ol { list-style: decimal; }
+.news-text h3, .news-text h4, .news-text h5, .news-text h6 { margin: 14px 0 4px; }
+.news-text blockquote { padding: 4px 0 4px 14px; border-left: 3px solid #333; }
+.news-text pre, .news-text code { padding: 2px 6px; border-radius: 6px; background: #101010; color: #ddd; font-size: 13px; }
+.news-text pre { padding: 12px; overflow-x: auto; }
+.news-text img { max-width: 100%; height: auto; margin: 10px 0; border-radius: 12px; }
+.news-text hr { border: 0; border-top: 1px solid var(--line); }
+.news-text table { border-collapse: collapse; }
+.news-text th, .news-text td { padding: 6px 10px; border: 1px solid var(--line); }
+

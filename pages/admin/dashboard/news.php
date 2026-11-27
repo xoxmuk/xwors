@@ -40,11 +40,11 @@ function admin_news_date(?string $value): string
 
 dash_start('news', 'Новости');
 ?>
-<?php if (isset($_GET['saved'])): ?><p class="success-message">Новость сохранена.</p><?php endif; ?>
-<?php if (isset($_GET['deleted'])): ?><p class="success-message">Новость удалена.</p><?php endif; ?>
-<?php if (isset($_GET['toggled'])): ?><p class="success-message">Видимость новости изменена.</p><?php endif; ?>
+<?php if (isset($_GET['saved'])): ?><p class="success-message flash">Новость сохранена.</p><?php endif; ?>
+<?php if (isset($_GET['deleted'])): ?><p class="success-message flash">Новость удалена.</p><?php endif; ?>
+<?php if (isset($_GET['toggled'])): ?><p class="success-message flash"><?= $_GET['toggled'] === 'hidden' ? 'Новость скрыта.' : 'Новость опубликована.' ?></p><?php endif; ?>
 <?php if (isset($_GET['error'])): ?>
-    <p class="form-error"><?= $_GET['error'] === 'empty' ? 'Добавьте версию, текст или картинку.' : 'Не удалось сохранить новость. Проверьте данные и попробуйте снова.' ?></p>
+    <p class="form-error flash"><?= $_GET['error'] === 'empty' ? 'Добавьте версию или текст новости.' : 'Не удалось сохранить новость. Проверьте данные и попробуйте снова.' ?></p>
 <?php endif; ?>
 <?php if ($error): ?><p class="form-error"><?= e($error) ?></p><?php endif; ?>
 
@@ -108,7 +108,7 @@ dash_start('news', 'Новости');
 <?php if ($showForm): ?>
 <section class="panel-card" id="news-form">
     <h2><?= $editing ? 'Редактировать новость #' . (int)$editing['id'] : 'Новая новость' ?></h2>
-    <p>Каждый блок — это заголовок и описание. Можно добавить несколько блоков и картинки.</p>
+    <p>Каждый блок — это заголовок и описание. Описание можно писать с HTML-разметкой.</p>
     <form method="post" action="/api/save-news" class="admin-form">
         <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
         <input type="hidden" name="id" value="<?= (int)($editing['id'] ?? 0) ?>">
@@ -139,44 +139,12 @@ dash_start('news', 'Новости');
                     </div>
                     <div class="field">
                         <label>Описание</label>
-                        <textarea name="block_description[]" rows="4"><?= e($block['description']) ?></textarea>
-                    </div>
-                    <div class="field">
-                        <label>Текст подсказки при наведении (необязательно)</label>
-                        <input name="block_tooltip[]" value="<?= e($block['tooltip'] ?? '') ?>" maxlength="255">
+                        <textarea name="block_description[]" rows="6" placeholder="Текст или HTML: &lt;b&gt;, &lt;i&gt;, &lt;a href=&quot;…&quot;&gt;, &lt;ul&gt;&lt;li&gt;, &lt;img src=&quot;…&quot;&gt;"><?= e($block['description']) ?></textarea>
                     </div>
                 </div>
 <?php endforeach; ?>
             </div>
             <div><button type="button" class="btn-secondary" data-add-block>+ Добавить блок</button></div>
-        </div>
-
-        <div class="field">
-            <span class="field-label">Картинки</span>
-            <div class="media-box" data-uploader="multi" data-folder="news" data-max-bytes="1048576" data-batch="3" data-total="12" data-csrf="<?= e($csrf) ?>" data-field="new_image[]">
-                <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" multiple hidden data-file>
-                <div class="media-grid" data-grid>
-<?php foreach ($formData['images'] as $index => $image): ?>
-                    <div class="media-tile" data-tile>
-                        <img src="<?= e($image) ?>" alt="">
-                        <input type="hidden" name="keep_image[]" value="<?= (int)$index ?>">
-                        <button type="button" class="btn-secondary btn-danger media-remove" data-remove-tile>Удалить</button>
-                    </div>
-<?php endforeach; ?>
-                </div>
-                <div class="media-drop" data-drop tabindex="0" role="button">
-                    <span class="media-icon">↑</span>
-                    <strong>Перетащите изображения сюда</strong>
-                    <span class="hint">или нажмите, чтобы выбрать · до 3 файлов по 1 МБ</span>
-                </div>
-            </div>
-            <span class="upload-error" data-error hidden></span>
-        </div>
-
-        <div class="field">
-            <label for="news-image-urls">Или ссылки на картинки</label>
-            <textarea id="news-image-urls" name="image_urls" rows="3" placeholder="https://example.com/image.png"></textarea>
-            <span class="hint">По одной ссылке в строке.</span>
         </div>
 
         <div class="admin-actions">
@@ -198,11 +166,7 @@ dash_start('news', 'Новости');
         </div>
         <div class="field">
             <label>Описание</label>
-            <textarea name="block_description[]" rows="4"></textarea>
-        </div>
-        <div class="field">
-            <label>Текст подсказки при наведении (необязательно)</label>
-            <input name="block_tooltip[]" maxlength="255">
+            <textarea name="block_description[]" rows="6" placeholder="Текст или HTML: &lt;b&gt;, &lt;i&gt;, &lt;a href=&quot;…&quot;&gt;, &lt;ul&gt;&lt;li&gt;, &lt;img src=&quot;…&quot;&gt;"></textarea>
         </div>
     </div>
 </template>

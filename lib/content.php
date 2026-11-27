@@ -8,9 +8,9 @@ function news_data(?string $json): array
     if (is_array($decoded)) {
         foreach ((array)($decoded['blocks'] ?? []) as $block) {
             if (!is_array($block)) continue;
-            $title = trim((string)($block['title'] ?? '')); $description = trim((string)($block['description'] ?? '')); $tooltip = trim((string)($block['tooltip'] ?? ''));
+            $title = trim((string)($block['title'] ?? '')); $description = trim((string)($block['description'] ?? ''));
             if ($title === '' && $description === '') continue;
-            $blocks[] = ['title' => $title, 'description' => $description, 'tooltip' => $tooltip];
+            $blocks[] = ['title' => $title, 'description' => $description];
         }
         foreach ((array)($decoded['images'] ?? []) as $image) if (is_string($image) && trim($image) !== '') $images[] = trim($image);
     }
@@ -92,4 +92,69 @@ function content_random_uuid(): string
     $bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
     $bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
     return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+}
+
+const CONTENT_HTML_TAGS = [
+    'a' => ['href', 'title'], 'abbr' => ['title'], 'b' => [], 'strong' => [], 'i' => [], 'em' => [], 'u' => [], 's' => [], 'del' => [], 'mark' => [],
+    'small' => [], 'sub' => [], 'sup' => [], 'code' => [], 'pre' => [], 'kbd' => [], 'br' => [], 'hr' => [], 'p' => [], 'div' => [], 'span' => [],
+    'blockquote' => [], 'ul' => [], 'ol' => [], 'li' => [], 'h3' => [], 'h4' => [], 'h5' => [], 'h6' => [],
+    'table' => [], 'thead' => [], 'tbody' => [], 'tr' => [], 'th' => [], 'td' => [],
+    'img' => ['src', 'alt', 'width', 'height', 'title'],
+];
+const CONTENT_HTML_DROP = ['script', 'style', 'iframe', 'object', 'embed', 'form', 'input', 'button', 'textarea', 'select', 'link', 'meta', 'svg', 'math', 'video', 'audio', 'base', 'noscript', 'template'];
+
+function content_safe_url(string $value, bool $image): bool
+{
+    $value = preg_replace('/[\x00-\x20\x7f]+/', '', $value) ?? '';
+    if ($value === '') return false;
+    if ($value[0] === '#') return !$image;
+    if ($value[0] === '/') return !str_starts_with($value, '//');
+    if (preg_match('#^https?://#i', $value)) return filter_var($value, FILTER_VALIDATE_URL) !== false;
+    return !$image && (bool)preg_match('#^mailto:[^\s]+$#i', $value);
+}
+
+function content_clean_node(DOMNode $node): void
+{
+    for ($i = $node->childNodes->length - 1; $i >= 0; $i--) {
+        $child = $node->childNodes->item($i);
+        if ($child instanceof DOMElement) {
+            $tag = strtolower($child->tagName);
+            if (!isset(CONTENT_HTML_TAGS[$tag])) {
+                if (in_array($tag, CONTENT_HTML_DROP, true)) { $node->removeChild($child); continue; }
+                content_clean_node($child);
+                while ($child->firstChild) $node->insertBefore($child->firstChild, $child);
+                $node->removeChild($child);
+                continue;
+            }
+            foreach (iterator_to_array($child->attributes) as $attr) {
+                $name = strtolower($attr->name);
+                if (!in_array($name, CONTENT_HTML_TAGS[$tag], true)) { $child->removeAttribute($attr->name); continue; }
+                if (($name === 'href' || $name === 'src') && !content_safe_url($attr->value, $name === 'src')) $child->removeAttribute($attr->name);
+            }
+            if ($tag === 'a') { $child->setAttribute('rel', 'noopener noreferrer nofollow'); $child->setAttribute('target', '_blank'); }
+            if ($tag === 'img') $child->setAttribute('loading', 'lazy');
+            content_clean_node($child);
+        } elseif (!($child instanceof DOMText)) {
+            $node->removeChild($child);
+        }
+    }
+}
+
+/** Renders news text: plain text keeps line breaks, text with tags is sanitized against a whitelist of safe HTML. */
+function content_render_html(string $text): string
+{
+    $text = trim($text);
+    if ($text === '') return '';
+    if (!str_contains($text, '<') || !class_exists('DOMDocument')) return nl2br(e($text));
+    $previous = libxml_use_internal_errors(true);
+    $doc = new DOMDocument('1.0', 'UTF-8');
+    $doc->loadHTML('<?xml encoding="UTF-8"><div>' . $text . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    libxml_clear_errors();
+    libxml_use_internal_errors($previous);
+    $root = $doc->getElementsByTagName('div')->item(0);
+    if (!$root) return nl2br(e($text));
+    content_clean_node($root);
+    $out = '';
+    foreach ($root->childNodes as $child) $out .= $doc->saveHTML($child);
+    return $out;
 }
