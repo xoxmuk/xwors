@@ -502,8 +502,18 @@ a.side.active { background-color: #202020; color: #f2f2f2; }
 }
 .duration-menu button:hover, .duration-menu button[aria-selected="true"] { background: #333; color: #fff; }
 .product-price-row ~ .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
     width: 100%;
     min-height: 46px;
+    padding: 0 16px;
+    border: 0;
+    line-height: 1;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
     margin-top: 12px;
     border-radius: 999px;
     background: #292929;
