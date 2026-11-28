@@ -1,4 +1,5 @@
 <?php
+/** Главная страница сайта — приветствие. */
 require_once __DIR__ . '/_layout.php';
 public_start('index', 'Главная');
 ?>

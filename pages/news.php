@@ -1,4 +1,5 @@
 <?php
+/** Страница «Новости»: выводит все опубликованные (не скрытые) новости от новых к старым. */
 require_once __DIR__ . '/_layout.php';
 require_once __DIR__ . '/../lib/content.php';
 public_start('news', 'Новости');
@@ -6,6 +7,7 @@ public_start('news', 'Новости');
 $news = [];
 $error = null;
 
+// Загружаем видимые новости; при сбое БД показываем сообщение об ошибке вместо падения страницы
 try {
     $news = db()->query(
         'SELECT id, version, data, create_at FROM news WHERE hidden = FALSE ORDER BY create_at DESC, id DESC'
@@ -21,6 +23,7 @@ try {
 <?php elseif (!$news): ?>
     <div class="card"><p>Пока новостей нет. Загляните позже.</p></div>
 <?php else: ?>
+<?php /* Карточка новости: версия и дата, картинки, затем блоки (заголовок + безопасный HTML описания) */ ?>
 <?php foreach ($news as $item): ?>
 <?php $data = news_data((string)$item['data']); ?>
     <article class="card news-card">
@@ -28,6 +31,7 @@ try {
             <span class="label"><?= (string)$item['version'] !== '' ? e((string)$item['version']) : 'Новость' ?></span>
             <time class="news-date" datetime="<?= e((string)$item['create_at']) ?>"><?= e(date('d.m.Y', strtotime((string)$item['create_at']))) ?></time>
         </div>
+<?php /* Картинки выводятся только если прошли проверку content_valid_image */ ?>
 <?php foreach ($data['images'] as $newsImage): ?>
 <?php if (content_valid_image((string)$newsImage)): ?><img class="news-image" src="<?= e((string)$newsImage) ?>" alt="" loading="lazy" decoding="async"><?php endif; ?>
 <?php endforeach; ?>

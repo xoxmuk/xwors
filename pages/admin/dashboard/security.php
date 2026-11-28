@@ -1,8 +1,10 @@
 <?php
+/** Раздел «Безопасность»: подключение, подтверждение и отключение двухэтапной авторизации (TOTP). */
 declare(strict_types=1);
 require_once __DIR__ . '/_layout.php';
 
 $adminLogin = dash_login();
+// Загружаем текущего администратора и его настройки 2FA
 try {
     $admin = admin_by_login($adminLogin);
 } catch (Throwable $e) {
@@ -12,18 +14,21 @@ try {
 }
 if (!$admin) { http_response_code(403); exit('Administrator not found'); }
 
+// Состояние 2FA: включена ли и есть ли уже сгенерированный секрет
 $twoFactor = is_array($admin['2fa'] ?? null) ? $admin['2fa'] : ['enabled' => 0, 'secret' => null];
 $enabled = !empty($twoFactor['enabled']);
 $secret = (string)($twoFactor['secret'] ?? '');
 $csrf = csrf_token();
 $issuer = rawurlencode('XWorsClient');
 $account = rawurlencode($adminLogin);
+// Ссылка otpauth:// для приложения-аутентификатора (из неё же в браузере рисуется QR-код)
 $otpauth = $secret !== ''
     ? "otpauth://totp/{$issuer}:{$account}?secret={$secret}&issuer={$issuer}&algorithm=SHA1&digits=6&period=30"
     : '';
 
 dash_start('security', 'Безопасность');
 
+/** Возвращает значок «?» с всплывающей подсказкой. */
 function tip(string $text): string
 {
     return '<span class="info-tip tooltip" tabindex="0" role="note" tooltip-text="' . e($text) . '">?</span>';
@@ -41,6 +46,7 @@ function tip(string $text): string
 <?php if (isset($_GET['disabled'])): ?><p class="success-message flash">Двухэтапная авторизация отключена.</p><?php endif; ?>
 <?php if (isset($_GET['error'])): ?><p class="form-error flash">Код неверный или устарел. Проверь время на телефоне и попробуй снова.</p><?php endif; ?>
 
+<?php /* Три состояния: 2FA включена (можно отключить) / секрет создан (нужно подтвердить кодом) / 2FA ещё не настроена */ ?>
 <?php if ($enabled): ?>
     <div class="security-divider"></div>
     <h3>Отключение 2FA <?= tip('Для отключения нужен текущий код из приложения — так никто посторонний не сможет снять защиту.') ?></h3>
@@ -52,6 +58,7 @@ function tip(string $text): string
             <button type="submit" class="danger-button">Отключить 2FA</button>
         </div>
     </form>
+<?php /* Подключение: QR-код, секретный ключ для ручного ввода и форма подтверждения кодом */ ?>
 <?php elseif ($secret !== ''): ?>
     <div class="security-divider"></div>
     <h3>Подключение аутентификатора <?= tip('Отсканируй QR-код в Google Authenticator, Aegis или другом TOTP-приложении. Если камера недоступна, введи секретный ключ вручную.') ?></h3>
@@ -74,6 +81,7 @@ function tip(string $text): string
             <p class="security-foot">🔒 QR-код создаётся прямо в браузере <?= tip('Секретный ключ не отправляется на сторонние сервисы.') ?></p>
         </div>
     </div>
+<?php /* 2FA не настроена: кнопка запускает генерацию секрета */ ?>
 <?php else: ?>
     <div class="security-divider"></div>
     <form method="post" action="/api/setup-2fa" class="security-form">

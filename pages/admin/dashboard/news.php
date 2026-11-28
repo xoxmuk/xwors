@@ -1,16 +1,19 @@
 <?php
+/** Раздел «Новости»: список новостей (видимость переключается кликом) и форма создания/редактирования с блоками текста. */
 declare(strict_types=1);
 require_once __DIR__ . '/_layout.php';
 require_once __DIR__ . '/../../../lib/content.php';
 
 $adminLogin = dash_login();
 $csrf = csrf_token();
+// ?edit=<id> — редактирование существующей новости, ?new=1 — создание новой
 $editId = (int)($_GET['edit'] ?? 0);
 $isNew = isset($_GET['new']);
 $news = [];
 $editing = null;
 $error = null;
 
+// Загружаем список (заголовок берётся из первого непустого блока прямо в SQL) и, при редактировании, полную запись новости
 try {
     $news = db()->query(
         "SELECT id, version, hidden, create_at, CASE WHEN jsonb_typeof(data->'blocks') = 'array' THEN (SELECT b->>'title' FROM jsonb_array_elements(data->'blocks') AS b WHERE COALESCE(b->>'title', '') <> '' LIMIT 1) END AS title FROM news ORDER BY create_at DESC, id DESC"
@@ -27,12 +30,15 @@ try {
     $error = 'Не удалось загрузить новости. Проверьте подключение к базе данных.';
 }
 
+// Данные формы: у новой новости — один пустой блок
 $formData = $editing ? news_data((string)$editing['data']) : ['blocks' => [], 'images' => []];
 if (!$formData['blocks']) $formData['blocks'] = [['title' => '', 'description' => '']];
 $formVersion = (string)($editing['version'] ?? '');
 $formHidden = !empty($editing['hidden']);
+// Форму показываем при создании новой новости или при редактировании найденной
 $showForm = $isNew || $editing !== null;
 
+/** Форматирует дату как «дд.мм.гггг чч:мм» (прочерк, если даты нет). */
 function admin_news_date(?string $value): string
 {
     return $value ? date('d.m.Y H:i', strtotime($value)) : '—';
@@ -40,6 +46,7 @@ function admin_news_date(?string $value): string
 
 dash_start('news', 'Новости');
 ?>
+<?php /* Уведомления об итогах действий и ошибки (всплывающие плашки, см. scripts/app.js) */ ?>
 <?php if (isset($_GET['saved'])): ?><p class="success-message flash">Новость сохранена.</p><?php endif; ?>
 <?php if (isset($_GET['deleted'])): ?><p class="success-message flash">Новость удалена.</p><?php endif; ?>
 <?php if (isset($_GET['toggled'])): ?><p class="success-message flash"><?= $_GET['toggled'] === 'hidden' ? 'Новость скрыта.' : 'Новость опубликована.' ?></p><?php endif; ?>
@@ -48,6 +55,7 @@ dash_start('news', 'Новости');
 <?php endif; ?>
 <?php if ($error): ?><p class="form-error"><?= e($error) ?></p><?php endif; ?>
 
+<?php /* Таблица новостей */ ?>
 <section class="panel-card table-panel">
     <div class="table-heading">
         <div>
@@ -104,6 +112,7 @@ dash_start('news', 'Новости');
 <?php endif; ?>
 </section>
 
+<?php /* Форма создания/редактирования новости */ ?>
 <?php if ($showForm): ?>
 <section class="panel-card" id="news-form">
     <h2><?= $editing ? 'Редактировать новость #' . (int)$editing['id'] : 'Новая новость' ?></h2>
@@ -124,6 +133,7 @@ dash_start('news', 'Новости');
 
         <div class="field">
             <span class="field-label">Блоки новости</span>
+            <?php /* Блоки новости: кнопки «Добавить/Удалить блок» обрабатывает app.js; поля передаются массивами block_title[] и block_description[] */ ?>
             <div class="news-blocks" data-blocks>
 <?php foreach ($formData['blocks'] as $block): ?>
                 <div class="news-block" data-block>
@@ -153,6 +163,7 @@ dash_start('news', 'Новости');
     </form>
 </section>
 
+<?php /* Шаблон нового пустого блока: app.js клонирует его по кнопке «+ Добавить блок» */ ?>
 <template id="news-block-template">
     <div class="news-block" data-block>
         <div class="news-block-head">

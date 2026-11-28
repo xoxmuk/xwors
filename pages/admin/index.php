@@ -1,11 +1,15 @@
 <?php
+/** Страница входа в админку: форма логина/пароля и второй шаг — ввод кода 2FA. */
 declare(strict_types=1);
 require_once __DIR__ . '/../../lib/auth.php';
+// Страницу входа нельзя кэшировать
 header('Cache-Control: no-store');
 
 try {
+    // Уже вошедшего администратора сразу отправляем в панель
     if (auth_user() !== null) { require_admin(); redirect('/admin/dashboard/'); }
     $csrfToken = csrf_token();
+    // Показываем шаг ввода кода 2FA, только если пароль уже подтверждён (есть промежуточная сессия)
     $step2fa = ($_GET['step'] ?? '') === '2fa' && pending_auth_user() !== null;
 } catch (Throwable $e) {
     error_log('Admin login page error: ' . $e->getMessage());
@@ -13,6 +17,7 @@ try {
     exit('Не удалось выполнить вход. Попробуйте позже.');
 }
 
+// Текст ошибки по параметрам адреса: просроченная сессия, неверный код или неверный логин/пароль
 $error = null;
 if (($_GET['error'] ?? '') === 'expired' || (($_GET['step'] ?? '') === '2fa' && !$step2fa)) {
     $error = 'Сессия входа истекла. Войдите заново.';
@@ -36,6 +41,7 @@ if (($_GET['error'] ?? '') === 'expired' || (($_GET['step'] ?? '') === '2fa' && 
 <?php if ($error): ?>
     <p class="form-error"><?= e($error) ?></p>
 <?php endif; ?>
+<?php /* Шаг 2: форма ввода шестизначного кода из аутентификатора */ ?>
 <?php if ($step2fa): ?>
     <p class="center">Введите 6-значный код из приложения-аутентификатора.</p>
     <form method="post" action="/api/verify-2fa" class="auth-form">
@@ -45,6 +51,7 @@ if (($_GET['error'] ?? '') === 'expired' || (($_GET['step'] ?? '') === '2fa' && 
         <button type="submit">Подтвердить</button>
     </form>
     <a class="back-link" href="/admin">Начать заново</a>
+<?php /* Шаг 1: форма логина и пароля */ ?>
 <?php else: ?>
     <form method="post" action="/api/authorization" class="auth-form">
         <input type="hidden" name="csrf" value="<?= e($csrfToken) ?>">

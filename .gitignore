@@ -1,11 +1,15 @@
+# Секреты и локальные настройки (шаблон .env.example хранится в репозитории)
 .env
 .env.*
 !.env.example
+# Служебная папка Vercel
 .vercel
+# Загруженные картинки не хранятся в Git, но сами папки и иконки по умолчанию сохраняются
 /public/assets/news/*
 /public/assets/goods/*
 !/public/assets/news/.gitkeep
 !/public/assets/goods/.gitkeep
 !/public/assets/goods/default_64.png
 !/public/assets/goods/default_1254.png
+# Зависимости Node.js
 node_modules

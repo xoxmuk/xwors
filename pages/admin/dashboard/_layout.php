@@ -1,10 +1,12 @@
 <?php
+/** Общий шаблон страниц админ-панели: проверка доступа, боковое меню, кнопка выхода. */
 declare(strict_types=1);
 require_once __DIR__ . '/../../../lib/auth.php';
 
-/** Verified admin login for this request (redirects to /admin when not authenticated). */
+/** Проверенный логин администратора для этого запроса (при отсутствии авторизации перенаправляет на /admin). */
 function dash_login(): string
 {
+    // Проверка выполняется один раз за запрос, результат запоминается
     static $login = null;
     if ($login === null) {
         header('Cache-Control: no-store');
@@ -13,9 +15,11 @@ function dash_login(): string
     return $login;
 }
 
+/** Выводит начало страницы админки: head, меню разделов и заголовок. $active — подсвеченный раздел. */
 function dash_start(string $active, string $title): void
 {
     $adminLogin = dash_login();
+    // Разделы админки: ключ => [подпись, адрес]
     $links = [
         'index'    => ['Главная', '/admin/dashboard/'],
         'news'     => ['Новости', '/admin/dashboard/news'],
@@ -33,6 +37,7 @@ function dash_start(string $active, string $title): void
     <title><?= e($title) ?> — XWorsClient Admin</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
     <link rel="stylesheet" href="/styles/index.css">
+<?php /* Библиотека QR-кодов нужна только на странице безопасности (подключение 2FA) */ ?>
 <?php if ($active === 'security'): ?>
     <script src="/scripts/qrcode.min.js" defer></script>
 <?php endif; ?>
@@ -47,13 +52,14 @@ function dash_start(string $active, string $title): void
 <?php endforeach; ?>
     </nav>
     <section class="sidebar-bottom center col">
+        <?php /* Логин текущего администратора и форма выхода (POST + CSRF-токен) */ ?>
         <span><?= e($adminLogin) ?></span>
         <form method="post" action="/api/logout"><input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>"><button class="logout-button" type="submit">Выйти</button></form>
     </section>
 </aside>
 <main class="main admin-main">
 <div class="topline"><span class="label"><?= e($title) ?></span></div>
-<?php } function dash_end(): void { ?>
+<?php } /* Закрывающая часть страницы админки */ function dash_end(): void { ?>
 </main>
 </body>
 </html>

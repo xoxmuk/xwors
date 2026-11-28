@@ -1,16 +1,20 @@
 <?php
+/** Главная страница админки: сводная статистика (пользователи, активные ключи, новости, товары). */
 require_once __DIR__ . '/_layout.php';
 dash_start('index', 'Главная');
 
+// Считаем все показатели одним запросом; «активный» ключ — бессрочный или ещё не истёкший
 try {
     $pdo = db();
     $counts = $pdo->query('SELECT (SELECT COUNT(*) FROM users) AS total, (SELECT COUNT(*) FROM users WHERE expires_at IS NULL OR expires_at > NOW()) AS active, (SELECT COUNT(*) FROM news) AS news, (SELECT COUNT(*) FROM goods) AS goods')->fetch();
     $total = (int)$counts['total']; $active = (int)$counts['active']; $newsCount = (int)$counts['news']; $goodsCount = (int)$counts['goods'];
 } catch (Throwable $e) {
     error_log('Dashboard stats error: ' . $e->getMessage());
+    // При ошибке БД вместо чисел будет показан прочерк
     $total = $active = $newsCount = $goodsCount = null;
 }
 ?>
+<?php /* Плитки со статистикой */ ?>
 <section class="stats-grid">
     <article class="panel-card">
         <span class="label">ВСЕГО ПОЛЬЗОВАТЕЛЕЙ</span>

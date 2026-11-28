@@ -1,11 +1,16 @@
+# Запрещаем показ содержимого каталогов
 Options -Indexes
 
+# Закрываем доступ ко всем скрытым файлам (.env, .git и т.д.), кроме .well-known
 <FilesMatch "^\.(?!well-known/)" >
     Require all denied
 </FilesMatch>
 
+# Правила Apache (если доступен mod_rewrite)
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    # Каталоги с серверным кодом недоступны напрямую
     RewriteRule ^(?:lib|pages|\.git)(?:/|$) - [F,L,NC]
+    # Служебные файлы проекта недоступны напрямую
     RewriteRule ^(?:README\.md|package\.json|vercel\.json|router\.php)$ - [F,L,NC]
 </IfModule>

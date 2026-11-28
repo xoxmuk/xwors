@@ -1,8 +1,10 @@
 <?php
+/** Раздел «Юзеры»: создание ключей доступа и список пользователей (копирование UUID/KEY по клику, удаление). */
 require_once __DIR__ . '/_layout.php';
 dash_start('users', 'Список юзеров');
 
 $csrf = csrf_token();
+// UUID только что созданного пользователя — его строка подсвечивается в таблице
 $created = (string)($_GET['created'] ?? '');
 $users = [];
 $error = null;
@@ -16,15 +18,18 @@ try {
     $error = 'Не удалось загрузить пользователей. Проверьте структуру таблицы users в базе данных.';
 }
 
+/** Форматирует дату как «дд.мм.гггг чч:мм»; для пустого значения возвращает $empty (например, «Бессрочно»). */
 function format_date(?string $value, string $empty): string
 {
     return $value ? date('d.m.Y H:i', strtotime($value)) : $empty;
 }
 ?>
+<?php /* Уведомления об итогах действий (показываются всплывающими плашками, см. scripts/app.js) */ ?>
 <?php if ($created !== ''): ?><p class="success-message flash">Пользователь создан, ключ сгенерирован.</p><?php endif; ?>
 <?php if (isset($_GET['deleted'])): ?><p class="success-message flash">Пользователь удалён.</p><?php endif; ?>
 <?php if (($_GET['error'] ?? '') === 'date'): ?><p class="form-error flash">Некорректная дата окончания.</p><?php endif; ?>
 
+<?php /* Форма создания пользователя: срок действия необязателен */ ?>
 <section class="panel-card">
     <h2>Создать пользователя</h2>
     <p>Будет сгенерирован случайный UUID и уникальный ключ из 32 символов.</p>
@@ -39,6 +44,7 @@ function format_date(?string $value, string $empty): string
     </form>
 </section>
 
+<?php /* Таблица пользователей */ ?>
 <section class="panel-card table-panel">
     <div class="table-heading">
         <div>
@@ -65,6 +71,7 @@ function format_date(?string $value, string $empty): string
                 </tr>
             </thead>
             <tbody>
+<?php /* Клик по UUID или KEY копирует значение в буфер обмена (обработчик data-copy-value в app.js) */ ?>
 <?php foreach ($users as $i => $u): ?>
                 <tr<?= $u['uuid'] === $created ? ' class="row-new"' : '' ?>>
                     <td class="uuid-cell copy-value" role="button" tabindex="0" data-copy-value="<?= e((string)$u['uuid']) ?>" title="Нажмите, чтобы скопировать UUID"><?= e((string)$u['uuid']) ?></td>

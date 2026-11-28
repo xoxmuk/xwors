@@ -1,6 +1,14 @@
 <?php
+/**
+ * Контент сайта: новости и товары (разбор данных, статусы, цены, кнопка «Купить»),
+ * загрузка и проверка картинок, а также безопасный вывод HTML из описаний (санитайзер по белому списку).
+ */
 declare(strict_types=1);
 
+/**
+ * Разбирает JSON поля news.data в безопасную структуру ['blocks' => [{title, description}], 'images' => [...]].
+ * Пустые блоки и некорректные значения отбрасываются.
+ */
 function news_data(?string $json): array
 {
     $decoded = json_decode((string)$json, true);
@@ -17,6 +25,7 @@ function news_data(?string $json): array
     return ['blocks' => $blocks, 'images' => $images];
 }
 
+/** Заголовок первого блока новости, у которого он не пуст (пустая строка, если такого нет). */
 function news_first_title(array $data): string
 {
     foreach ($data['blocks'] ?? [] as $block) if (is_array($block) && trim((string)($block['title'] ?? '')) !== '') return trim((string)$block['title']);
@@ -24,11 +33,14 @@ function news_first_title(array $data): string
 }
 
 
-/** goods.prices JSONB: [{name, price, discount}] */
+/**
+ * Разбирает goods.prices (JSONB): список вариантов цены [{name, price, discount}].
+ * Некорректные элементы пропускаются; если ничего не осталось, возвращается вариант по умолчанию «1d» с нулевой ценой.
+ */
 function goods_prices(?string $json): array
 {
     $decoded = json_decode((string)$json, true);
-    // Legacy compatibility while deployments migrate.
+    // Совместимость со старым форматом (одно число вместо JSON) на время миграции.
     if (!is_array($decoded)) {
         $legacy = is_numeric($json) ? (float)$json : 0;
         return [['name' => '1d', 'price' => max(0, $legacy), 'discount' => 0]];
@@ -48,12 +60,16 @@ function goods_prices(?string $json): array
     return $items ?: [['name' => '1d', 'price' => 0, 'discount' => 0]];
 }
 
+/** Допустимые статусы товара: ключ => подпись и цвет индикатора. */
 function goods_statuses(): array
 {
     return ['undetected' => ['label' => 'Undetected', 'color' => 'lime'], 'detected' => ['label' => 'Detected', 'color' => 'red'], 'updating' => ['label' => 'Updating', 'color' => 'orange']];
 }
+/** Подпись и цвет статуса; для неизвестного статуса возвращается «Undetected». */
 function goods_status_meta(?string $status): array { $all = goods_statuses(); return $all[(string)$status] ?? $all['undetected']; }
+/** Следующий статус по кругу (Undetected → Detected → Updating → …). */
 function goods_next_status(?string $status): string { $keys = array_keys(goods_statuses()); $index = array_search((string)$status, $keys, true); return $keys[$index === false ? 0 : ($index + 1) % count($keys)]; }
+/** Варианты поведения кнопки «Купить» в редакторе товара. */
 function goods_buy_types(): array
 {
     return [
@@ -63,7 +79,7 @@ function goods_buy_types(): array
         'page' => 'Страница сайта',
     ];
 }
-/** Decodes goods.purchase (JSONB {"type","url"}) into a safe ['type','url'] pair. */
+/** Разбирает goods.purchase (JSONB {"type","url"}) в безопасную пару ['type','url']; при ошибке — кнопка неактивна. */
 function goods_purchase(?string $json): array
 {
     $d = json_decode((string)$json, true);
@@ -72,24 +88,31 @@ function goods_purchase(?string $json): array
     if (!isset(goods_buy_types()[$type]) || ($type !== 'none' && $url === '')) return ['type' => 'none', 'url' => ''];
     return ['type' => $type, 'url' => $url];
 }
+/** Страницы сайта, на которые может вести кнопка «Купить» (тип «Страница сайта»). */
 function goods_buy_pages(): array { return ['/' => 'Главная', '/news' => 'Новости']; }
 
-/** Validates the «Купить» target. Returns ['type' => ..., 'url' => ...] or ['error' => message]. */
+/**
+ * Проверяет назначение кнопки «Купить» и нормализует его.
+ * Возвращает ['type' => ..., 'url' => ...] или ['error' => сообщение для администратора].
+ */
 function goods_buy_resolve(string $type, string $value, string $page): array
 {
     $value = trim($value);
     switch ($type) {
         case 'none': return ['type' => 'none', 'url' => ''];
+        // Telegram: принимаем @username, username, t.me/username и ссылки-приглашения; приводим к виду https://t.me/…
         case 'telegram':
             if ($value === '') return ['error' => 'Укажите Telegram: @username или ссылку t.me/…'];
             if (preg_match('#^(?:https?://)?(?:t(?:elegram)?\.me/)?@?([A-Za-z][A-Za-z0-9_]{4,31})/?$#i', $value, $m)) return ['type' => 'telegram', 'url' => 'https://t.me/' . $m[1]];
             if (preg_match('#^https?://t\.me/\+[A-Za-z0-9_-]+$#i', $value) || preg_match('#^https?://t\.me/joinchat/[A-Za-z0-9_-]+$#i', $value)) return ['type' => 'telegram', 'url' => $value];
             return ['error' => 'Некорректный Telegram: нужен @username (5–32 символа: латиница, цифры, _) или ссылка t.me/…'];
+        // Внешняя ссылка: при отсутствии схемы добавляем https://, затем проверяем формат и длину (до 500 символов)
         case 'link':
             if ($value === '') return ['error' => 'Укажите ссылку для кнопки «Купить».'];
             if (!preg_match('#^https?://#i', $value)) $value = 'https://' . $value;
             if (filter_var($value, FILTER_VALIDATE_URL) === false || strlen($value) > 500) return ['error' => 'Некорректная ссылка. Пример: https://example.com/buy'];
             return ['type' => 'link', 'url' => $value];
+        // Страница сайта: допускается только значение из белого списка goods_buy_pages()
         case 'page':
             if (!isset(goods_buy_pages()[$page])) return ['error' => 'Выберите страницу сайта из списка.'];
             return ['type' => 'page', 'url' => $page];
@@ -97,15 +120,24 @@ function goods_buy_resolve(string $type, string $value, string $page): array
     return ['error' => 'Неизвестный способ покупки.'];
 }
 
+/** Форматирует цену для показа: «1 234,50 ₽»; нулевая и отрицательная цена выводится как «Цена по запросу». */
 function content_price(float|int|string $value): string { $number = (float)$value; if ($number <= 0) return 'Цена по запросу'; $decimals = fmod($number, 1.0) === 0.0 ? 0 : 2; return number_format($number, $decimals, ',', ' ') . ' ₽'; }
-const CONTENT_IMAGE_FOLDERS = ['news', 'goods'];
+const CONTENT_IMAGE_FOLDERS = ['news', 'goods'];   // папки, в которые разрешена загрузка картинок
+// Допустимые MIME-типы картинок и соответствующие расширения файлов
 const CONTENT_IMAGE_TYPES = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp', 'image/avif' => 'avif'];
+// Шаблон локального пути картинки: /assets/<папка>/<sha256-хэш>.<расширение>
 const CONTENT_LOCAL_IMAGE = '#^/assets/(news|goods)/[a-f0-9]{64}\.(jpg|png|gif|webp|avif)$#';
 
+/** Каталог на диске, где хранятся загруженные картинки указанной папки. */
 function content_assets_dir(string $folder): string { return dirname(__DIR__) . '/public/assets/' . $folder; }
 
+/** Проверяет, что значение — путь к картинке, загруженной через админку (по шаблону CONTENT_LOCAL_IMAGE). */
 function content_local_image(string $value): bool { return (bool)preg_match(CONTENT_LOCAL_IMAGE, $value); }
 
+/**
+ * Проверяет, что значение можно безопасно выводить как картинку:
+ * data:-URI (до 2 МБ), существующий локальный файл или HTTPS-ссылка.
+ */
 function content_valid_image(string $value): bool
 {
     $value = trim($value);
@@ -119,8 +151,9 @@ function content_valid_image(string $value): bool
     return $scheme === 'https' && filter_var($value, FILTER_VALIDATE_URL) !== false;
 }
 
-const CONTENT_MAX_PIXELS = 8000;
+const CONTENT_MAX_PIXELS = 8000;   // максимальная ширина/высота загружаемой картинки в пикселях
 
+/** Переводит значение из php.ini вида «8M», «2G», «512K» в байты. */
 function content_ini_bytes(string $name): int
 {
     $value = trim((string)ini_get($name));
@@ -129,9 +162,10 @@ function content_ini_bytes(string $name): int
     return (int)match (strtolower(substr($value, -1))) { 'g' => $number * 1073741824, 'm' => $number * 1048576, 'k' => $number * 1024, default => $number };
 }
 
+/** Форматирует размер в мегабайтах для сообщений об ошибках, например «1,5 МБ». */
 function content_format_mb(int $bytes): string { return rtrim(rtrim(number_format($bytes / 1048576, 1, ',', ''), '0'), ',') . ' МБ'; }
 
-/** True when the app cannot write to its own folder (Vercel and other read-only hosts). */
+/** Возвращает true, если приложение не может писать в свою папку (Vercel и другие хостинги «только для чтения»). */
 function content_storage_readonly(string $dir): bool
 {
     if (env_get('VERCEL') !== null || env_get('AWS_LAMBDA_FUNCTION_NAME') !== null) return true;
@@ -139,14 +173,17 @@ function content_storage_readonly(string $dir): bool
 }
 
 /**
- * Validates an uploaded image, hashes its content (SHA-256) and stores it as public/assets/<folder>/<hash>.<ext>.
- * Returns ['path' => '/assets/<folder>/<hash>.<ext>'] or ['error' => '<message>', 'code' => '<code>'].
+ * Проверяет загруженную картинку, считает хэш её содержимого (SHA-256) и сохраняет как public/assets/<папка>/<хэш>.<расширение>.
+ * Одинаковые файлы получают одно имя, поэтому дубликаты не создаются.
+ * Возвращает ['path' => '/assets/<папка>/<хэш>.<расширение>'] или ['error' => 'сообщение', 'code' => 'код'].
  */
 function content_store_upload(array $file, string $folder, int $maxBytes): array
 {
+    // Короткая функция-помощник для формирования ответа с ошибкой
     $fail = static fn(string $code, string $message): array => ['error' => $message, 'code' => $code];
     if (!in_array($folder, CONTENT_IMAGE_FOLDERS, true)) return $fail('folder', 'Неизвестная папка для загрузки.');
 
+    // Расшифровываем код ошибки загрузки PHP в понятное сообщение
     $code = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
     switch ($code) {
         case UPLOAD_ERR_OK: break;
@@ -160,12 +197,14 @@ function content_store_upload(array $file, string $folder, int $maxBytes): array
         default: return $fail('unknown', 'Не удалось получить файл (код ' . $code . ').');
     }
 
+    // Проверяем, что файл действительно пришёл через HTTP-загрузку, и его размер
     $tmp = (string)($file['tmp_name'] ?? '');
     if ($tmp === '' || !is_uploaded_file($tmp)) return $fail('not_uploaded', 'Не удалось получить файл.');
     $size = (int)($file['size'] ?? 0);
     if ($size <= 0) return $fail('empty', 'Файл пустой (0 байт).');
     if ($size > $maxBytes) return $fail('too_big', 'Файл весит ' . content_format_mb($size) . ', допустимо не больше ' . content_format_mb($maxBytes) . '.');
 
+    // Определяем реальный тип и размеры по содержимому (а не по имени файла) и ограничиваем разрешение
     $info = @getimagesize($tmp);
     if ($info === false) return $fail('not_image', 'Файл повреждён или не является изображением.');
     $mime = strtolower((string)($info['mime'] ?? ''));
@@ -234,11 +273,13 @@ function content_store_upload(array $file, string $folder, int $maxBytes): array
         return ['path' => (string)$blobData['url']];
     }
 
+    // Локальное хранение (VPS): проверяем каталог, права и свободное место
     $dir = content_assets_dir($folder);
     if (content_storage_readonly($dir)) return $fail('readonly', 'Сервер работает в режиме «только чтение». Для Vercel добавьте PUBLIC_BLOB_READ_WRITE_TOKEN (Vercel Blob) или укажите URL изображения.');
     if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) return $fail('mkdir', 'Не удалось создать папку public/assets/' . $folder . '. Проверьте права на запись.');
     if (!is_writable($dir)) return $fail('not_writable', 'Нет прав на запись в папку public/assets/' . $folder . '.');
 
+    // Файл с таким хэшем уже может существовать — тогда повторно не сохраняем
     $name = $hash . '.' . CONTENT_IMAGE_TYPES[$mime];
     $target = $dir . '/' . $name;
     if (!is_file($target)) {
@@ -251,7 +292,7 @@ function content_store_upload(array $file, string $folder, int $maxBytes): array
     return ['path' => '/assets/' . $folder . '/' . $name];
 }
 
-/** Deletes local image files that are no longer referenced by any news or good. */
+/** Удаляет локальные файлы картинок, на которые больше не ссылается ни одна новость и ни один товар. */
 function content_cleanup_images(PDO $pdo, array $paths): void
 {
     foreach (array_unique($paths) as $path) {
@@ -262,6 +303,7 @@ function content_cleanup_images(PDO $pdo, array $paths): void
     }
 }
 
+/** Генерирует случайный UUID версии 4 (с правильными битами версии и варианта). */
 function content_random_uuid(): string
 {
     $bytes = random_bytes(16);
@@ -270,6 +312,7 @@ function content_random_uuid(): string
     return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
 }
 
+// Белый список HTML-тегов для новостей и описаний: тег => разрешённые атрибуты
 const CONTENT_HTML_TAGS = [
     'a' => ['href', 'title'], 'abbr' => ['title'], 'b' => [], 'strong' => [], 'i' => [], 'em' => [], 'u' => [], 's' => [], 'del' => [], 'mark' => [],
     'small' => [], 'sub' => [], 'sup' => [], 'code' => [], 'pre' => [], 'kbd' => [], 'br' => [], 'hr' => [], 'p' => [], 'div' => [], 'span' => [],
@@ -277,8 +320,10 @@ const CONTENT_HTML_TAGS = [
     'table' => [], 'thead' => [], 'tbody' => [], 'tr' => [], 'th' => [], 'td' => [],
     'img' => ['src', 'alt', 'width', 'height', 'title'],
 ];
+// Теги, которые вырезаются вместе с содержимым (остальные неразрешённые теги заменяются своим текстом)
 const CONTENT_HTML_DROP = ['script', 'style', 'iframe', 'object', 'embed', 'form', 'input', 'button', 'textarea', 'select', 'link', 'meta', 'svg', 'math', 'video', 'audio', 'base', 'noscript', 'template'];
 
+/** Проверяет безопасность ссылки: для картинок только https/локальные пути, для ссылок ещё #якорь и mailto:. Протоколы вроде javascript: отклоняются. */
 function content_safe_url(string $value, bool $image): bool
 {
     $value = preg_replace('/[\x00-\x20\x7f]+/', '', $value) ?? '';
@@ -292,6 +337,11 @@ function content_safe_url(string $value, bool $image): bool
     return !$image && (bool)preg_match('#^mailto:[^\s]+$#i', $value);
 }
 
+/**
+ * Рекурсивно очищает DOM-узел: удаляет запрещённые теги и атрибуты, проверяет ссылки,
+ * фильтрует inline-стили, обрабатывает специальные элементы (tooltip и разделитель devider)
+ * и принудительно добавляет безопасные атрибуты ссылкам и картинкам.
+ */
 function content_clean_node(DOMNode $node): void
 {
     for ($i = $node->childNodes->length - 1; $i >= 0; $i--) {
@@ -305,14 +355,15 @@ function content_clean_node(DOMNode $node): void
                 $node->removeChild($child);
                 continue;
             }
+            // Оставляем только разрешённые атрибуты; в href/src пропускаем лишь безопасные адреса
             foreach (iterator_to_array($child->attributes) as $attr) {
                 $name = strtolower($attr->name);
-                if (in_array($name, ['tooltip-text', 'tooltip-position', 'class', 'style'], true)) continue; // handled below
+                if (in_array($name, ['tooltip-text', 'tooltip-position', 'class', 'style'], true)) continue; // эти атрибуты обрабатываются ниже
                 if ($tag === 'div' && $name === 'devider-text') continue;
                 if (!in_array($name, CONTENT_HTML_TAGS[$tag], true)) { $child->removeAttribute($attr->name); continue; }
                 if (($name === 'href' || $name === 'src') && !content_safe_url($attr->value, $name === 'src')) $child->removeAttribute($attr->name);
             }
-            // Tooltip: tooltip-text="…" (class="tooltip" is added automatically); no other classes are allowed
+            // Подсказка (tooltip): tooltip-text="…" (class="tooltip" добавляется автоматически); других классов тут не допускается
             $tip = trim($child->getAttribute('tooltip-text'));
             $tipPosition = trim($child->getAttribute('tooltip-position'));
             $validTipPositions = ['left-up', 'up', 'right-up', 'left', 'right', 'left-bottom', 'bottom', 'right-bottom'];
@@ -323,8 +374,8 @@ function content_clean_node(DOMNode $node): void
             $deviderText = '';
             if ($tag !== 'div') $safeDivClass = implode(' ', array_slice(array_filter($requestedClasses, static fn($c) => (bool)preg_match('/^[a-zA-Z][a-zA-Z0-9_-]{0,40}$/', $c)), 0, 12));
             if ($tag === 'div') {
-                // Keep only the supported layout classes. A divider may be aligned with
-                // "devider left" or "devider right"; arbitrary classes are discarded.
+                // Сохраняем только поддерживаемые классы оформления. Разделитель можно выровнять
+                // классами "devider left" или "devider right"; произвольные классы отбрасываются.
                 $safeClasses = array_values(array_filter($requestedClasses, static fn($c) => (bool)preg_match('/^[a-zA-Z][a-zA-Z0-9_-]{0,40}$/', $c)));
                 if (in_array('devider', $safeClasses, true)) {
                     $alignment = in_array('left', $safeClasses, true) ? 'left'
@@ -338,7 +389,7 @@ function content_clean_node(DOMNode $node): void
             $child->removeAttribute('tooltip-position');
             $child->removeAttribute('devider-text');
             if ($safeDivClass !== '') $child->setAttribute('class', $safeDivClass);
-            // Safe inline styling: allow presentation properties only; reject URLs, expressions and markup.
+            // Безопасные inline-стили: разрешены только свойства оформления; ссылки, expression и разметка отклоняются.
             $style = $child->getAttribute('style');
             $safeStyles = [];
             $allowedStyles = ['color','background-color','border','border-color','border-radius','padding','padding-top','padding-right','padding-bottom','padding-left','margin','margin-top','margin-bottom','font-size','font-weight','font-style','text-align','text-decoration','display','gap','width','max-width','opacity','box-shadow'];
@@ -351,8 +402,8 @@ function content_clean_node(DOMNode $node): void
 
             if (str_starts_with($safeDivClass, 'devider') && $deviderText !== '') {
                 $child->setAttribute('devider-text', $deviderText);
-                // The divider is authored as an empty div. Put the label into the DOM
-                // between the two CSS-generated horizontal rules.
+                // Разделитель пишется как пустой div. Помещаем подпись в DOM
+                // между двумя линиями, которые рисует CSS.
                 if (trim($child->textContent) === '') $child->appendChild($child->ownerDocument->createTextNode($deviderText));
             }
             if ($tip !== '' && !in_array($tag, ['img', 'br', 'hr'], true)) {
@@ -361,6 +412,7 @@ function content_clean_node(DOMNode $node): void
                 $child->setAttribute('tooltip-position', $tipPosition);
                 $child->setAttribute('tabindex', '0');
             }
+            // Внешние ссылки открываются в новой вкладке без передачи referrer и без влияния на SEO; картинки грузятся лениво
             if ($tag === 'a') { $child->setAttribute('rel', 'noopener noreferrer nofollow'); $child->setAttribute('target', '_blank'); }
             if ($tag === 'img') $child->setAttribute('loading', 'lazy');
             content_clean_node($child);
@@ -370,7 +422,7 @@ function content_clean_node(DOMNode $node): void
     }
 }
 
-/** Renders news text: plain text keeps line breaks, text with tags is sanitized against a whitelist of safe HTML. */
+/** Выводит текст новости: простой текст сохраняет переносы строк, текст с тегами очищается по белому списку безопасного HTML. */
 function content_render_html(string $text): string
 {
     $text = trim($text);
@@ -390,22 +442,24 @@ function content_render_html(string $text): string
 }
 
 /**
- * Prepares a product description for content_render_html():
- *  - consecutive lines starting with "∘" (or "◦") become one <ul> with <li> items;
- *  - other plain-text lines become <p> blocks (so line breaks survive in HTML mode);
- *  - lines that start with a tag (<div class="devider …">, <a>, <ul>…) are kept as authored;
- *  - lines inside an unclosed block tag (multi-line <ul>…</ul>) are never touched.
- * Inline HTML after the marker is supported: "∘ <p tooltip-text="…">Tooltip</p>".
+ * Готовит описание товара для content_render_html():
+ *  - подряд идущие строки, начинающиеся с «∘» (или «◦»), превращаются в один <ul> с пунктами <li>;
+ *  - остальные строки обычного текста становятся блоками <p> (чтобы переносы строк сохранялись в HTML-режиме);
+ *  - строки, начинающиеся с тега (<div class="devider …">, <a>, <ul>…), остаются как написал автор;
+ *  - строки внутри незакрытого блочного тега (многострочный <ul>…</ul>) не трогаются.
+ * После маркера допускается inline-HTML: "∘ <p tooltip-text="…">Подсказка</p>".
  */
 function content_description_blocks(string $text): string
 {
     $text = trim(str_replace(["\r\n", "\r"], "\n", $text));
     if ($text === '') return '';
 
+    // Список блочных тегов — по ним отслеживаем вложенность (depth), чтобы не ломать многострочные блоки
     $blockTags = 'ul|ol|li|div|p|blockquote|table|thead|tbody|tr|th|td|pre|h3|h4|h5|h6';
     $out = [];
     $items = [];
     $depth = 0;
+    // Сбрасывает накопленные пункты списка в один блок <ul>
     $flush = static function () use (&$out, &$items): void {
         if ($items) $out[] = '<ul>' . implode('', $items) . '</ul>';
         $items = [];
@@ -430,6 +484,7 @@ function content_description_blocks(string $text): string
             }
         }
 
+        // Пересчитываем глубину вложенности по числу открывающих и закрывающих блочных тегов в строке
         $opens = preg_match_all('#<(?:' . $blockTags . ')(?=[\s>/])[^>]*(?<!/)>#i', $content);
         $closes = preg_match_all('#</(?:' . $blockTags . ')\s*>#i', $content);
         $depth = max(0, $depth + (int)$opens - (int)$closes);
@@ -438,7 +493,7 @@ function content_description_blocks(string $text): string
     return implode("\n", $out);
 }
 
-/** Renders a product description: ∘-lines → list items, then the same safe HTML as in news (devider, tooltip, links). */
+/** Выводит описание товара: строки с «∘» → пункты списка, затем тот же безопасный HTML, что и в новостях (devider, tooltip, ссылки). */
 function content_render_description(string $text): string
 {
     return content_render_html(content_description_blocks($text));

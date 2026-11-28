@@ -1,5 +1,6 @@
-/* XWorsClient */
+/* XWorsClient — общие стили сайта и админ-панели (тёмная тема) */
 
+/* Переменные темы: цвета, ширина бокового меню, горизонтальные отступы */
 :root {
     color-scheme: dark;
     --bg: #000;
@@ -17,6 +18,7 @@
     --gap-x: 32px;
 }
 
+/* Сброс стилей: единая модель размеров, нулевые отступы, запрет выделения текста по умолчанию */
 *, *:before, *:after {
     box-sizing: border-box;
     scrollbar-width: thin;
@@ -28,6 +30,7 @@
     -moz-user-select: none;
     user-select: none;
 }
+/* Базовые стили страницы и типографика */
 html {
     min-height: 100%;
     background: var(--bg);
@@ -45,6 +48,7 @@ body {
     -moz-user-select: none;
     user-select: none;
 }
+/* Списки без маркеров; медиа-элементы — блочные, не шире контейнера и без перетаскивания */
 ul, ol { list-style: none; }
 img, picture, video, canvas, svg {
     display: block;
@@ -52,6 +56,7 @@ img, picture, video, canvas, svg {
     -webkit-user-drag: none;
     user-select: none;
 }
+/* В полях ввода выделение текста разрешено */
 input, textarea, [contenteditable="true"] {
     -webkit-user-select: text;
     -moz-user-select: text;
@@ -72,7 +77,7 @@ a {
 a:hover { color: var(--white); }
 :focus-visible { outline: 2px solid #666; outline-offset: 2px; }
 
-/* Tooltip */
+/* Подсказка (tooltip): текст берётся из атрибута tooltip-text и показывается через ::after при наведении или фокусе */
 .tooltip { position: relative; }
 .tooltip[tooltip-position="left-up"], .tooltip[tooltip-position="up"], .tooltip[tooltip-position="right-up"], .tooltip[tooltip-position="left"], .tooltip[tooltip-position="right"], .tooltip[tooltip-position="left-bottom"], .tooltip[tooltip-position="bottom"], .tooltip[tooltip-position="right-bottom"] { --tooltip-positioned: 1; }
 .tooltip::after {
@@ -109,7 +114,7 @@ a:hover { color: var(--white); }
     transform: translateX(-50%) translateY(0);
 }
 
-/* Tooltip placement */
+/* Расположение подсказки относительно элемента (атрибут tooltip-position): сверху, снизу, слева, справа и углы */
 .tooltip[tooltip-position="left-up"]::after { left: 0; right: auto; bottom: calc(100% + 8px); top: auto; transform: translateY(4px); text-align: left; }
 .tooltip[tooltip-position="up"]::after { left: 50%; right: auto; bottom: calc(100% + 8px); top: auto; transform: translate(-50%, 4px); }
 .tooltip[tooltip-position="right-up"]::after { left: auto; right: 0; bottom: calc(100% + 8px); top: auto; transform: translateY(4px); text-align: right; }
@@ -130,7 +135,7 @@ a:hover { color: var(--white); }
 .tooltip[tooltip-position="right"]:focus-visible::after { transform: translate(0, -50%); }
 
 
-/* Utilities */
+/* Вспомогательные классы: flex/grid-раскладка, выравнивание, отступы, текст */
 .flex { display: flex; gap: 8px; }
 .row { display: flex; flex-direction: row; gap: 8px; }
 .col { display: flex; flex-direction: column; gap: 8px; }
@@ -181,11 +186,12 @@ a:hover { color: var(--white); }
 .gap-16 { gap: 16px; }
 .gap-24 { gap: 24px; }
 
+/* Мелкие элементы: цветная точка, логотип, серая подпись */
 .muted-dot { display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: #777; }
 .brand { display: flex; align-items: center; gap: 10px; color: var(--text); font-size: 28px; letter-spacing: -.5px; }
 .label { color: #666; font-size: 12px; font-weight: 700; }
 
-/* Layout: sidebar + content */
+/* Каркас страницы: боковое меню (фиксировано слева) + область контента */
 .sidebar {
     position: fixed;
     inset: 0 auto 0 0;
@@ -236,6 +242,7 @@ a.side:hover { background-color: rgba(28, 28, 28, .5); color: var(--muted); }
 a.side.active { background-color: #202020; color: #f2f2f2; }
 .sidebar-bottom { margin-top: auto; color: #777; font-size: 12px; padding: 10px 12px; }
 
+/* Основная область: отступ слева под боковое меню, ограничение ширины содержимого */
 .main {
     margin-left: var(--sidebar-w);
     padding: 36px var(--gap-x) 70px;
@@ -243,9 +250,10 @@ a.side.active { background-color: #202020; color: #f2f2f2; }
 .main > * { width: 100%; max-width: 900px; margin-left: auto; margin-right: auto; }
 .admin-main > * { max-width: 1000px; }
 
+/* Верхняя строка с заголовком страницы */
 .topline { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
 
-/* Status pill */
+/* Индикатор статуса (пилюля с пульсирующей точкой); цвет задаётся атрибутом data-color */
 .status {
     --color: white;
     display: inline-flex;
@@ -280,7 +288,7 @@ a.side.active { background-color: #202020; color: #f2f2f2; }
     * { transition: none !important; }
 }
 
-/* Cards */
+/* Карточки контента */
 .card {
     min-height: 120px;
     margin-bottom: 13px;
@@ -296,7 +304,7 @@ a.side.active { background-color: #202020; color: #f2f2f2; }
 .card p { overflow-wrap: anywhere; }
 .card img { margin: 10px 0; border-radius: 12px; }
 
-/* News */
+/* Новости: шапка карточки (версия + дата) и картинки */
 .news-card { gap: 8px; }
 .news-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .news-date { color: #666; font-size: 12px; }
@@ -305,7 +313,7 @@ a.side.active { background-color: #202020; color: #f2f2f2; }
 .news-images { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 8px; }
 .news-images img { width: 100%; height: 100%; max-height: 380px; object-fit: cover; border-radius: 14px; margin: 0; }
 
-/* Products (Покупка) — компактные карточки в стиле витрины */
+/* Товары (страница «Покупка») — компактные карточки в стиле витрины */
 .products {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 314px));
@@ -337,6 +345,7 @@ a.side.active { background-color: #202020; color: #f2f2f2; }
     border-color: #383838;
     box-shadow: 0 18px 38px rgba(0,0,0,.34);
 }
+/* Картинка товара и плашка статуса, выступающая над верхним краем */
 .product-visual {
     position: relative;
     width: calc(100% + 48px);
@@ -399,6 +408,7 @@ a.side.active { background-color: #202020; color: #f2f2f2; }
     line-height: 1.55;
     overflow-wrap: anywhere;
 }
+/* Строка цены: итоговая цена, старая цена, скидка и выбор срока подписки */
 .product-price-row {
     position: relative;
     margin-top: auto;
@@ -446,6 +456,7 @@ a.side.active { background-color: #202020; color: #f2f2f2; }
 }
 .product-discount[hidden],
 .product-old-price[hidden] { display: none !important; }
+/* Выпадающий список срока подписки */
 .duration-picker { position: relative; flex: 0 0 auto; }
 .duration-trigger {
     display: inline-flex;
@@ -497,6 +508,7 @@ a.side.active { background-color: #202020; color: #f2f2f2; }
     cursor: pointer;
 }
 .duration-menu button:hover, .duration-menu button[aria-selected="true"] { background: #333; color: #fff; }
+/* Кнопка «Оплатить» под строкой цены */
 .product-price-row ~ .btn {
     display: flex;
     align-items: center;
@@ -524,7 +536,7 @@ a.side.active { background-color: #202020; color: #f2f2f2; }
 .product a.btn:not(.btn-disabled) { background: #292929; color: #858585; }
 .product a.btn:not(.btn-disabled):hover { background: #333; color: #ddd; }
 
-/* Auth */
+/* Страница входа в админку и формы авторизации */
 .auth-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--bg); }
 .auth-card {
     width: min(100%, 420px);
@@ -564,6 +576,7 @@ a.side.active { background-color: #202020; color: #f2f2f2; }
 .auth-form button { margin-top: 8px; }
 .auth-form button:hover, .logout-button:hover { opacity: .85; }
 .back-link { color: #888; font-size: 13px; text-align: center; margin-top: 5px; }
+/* Сообщения об ошибке и об успехе */
 .form-error {
     color: var(--danger);
     background: #291616;
@@ -583,7 +596,7 @@ a.side.active { background-color: #202020; color: #f2f2f2; }
 }
 .admin-link { margin-top: 14px !important; border: 1px solid #282828; }
 
-/* Admin content forms */
+/* Формы админки: ряд кнопок действий, кнопки, поля ввода */
 .admin-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .admin-actions .btn { margin-top: 0; min-height: 38px; padding: 0 22px; border-radius: 10px; font-size: 13px; line-height: 1; white-space: nowrap; }
 .admin-actions .btn-secondary { min-height: 38px; padding: 0 16px; border-radius: 10px; }
@@ -591,7 +604,7 @@ a.side.active { background-color: #202020; color: #f2f2f2; }
 td.actions-cell { width: 1%; text-align: right; }
 .actions { display: flex; flex-wrap: nowrap; align-items: center; justify-content: flex-end; gap: 6px; }
 .users-table th.actions-col { width: 1%; }
-/* Primary button (e.g. «Сохранить») */
+/* Основная кнопка (например, «Сохранить») */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -611,6 +624,7 @@ td.actions-cell { width: 1%; text-align: right; }
     transition: background-color .2s ease, color .2s ease, opacity .2s ease;
 }
 .btn:hover { background: #fff; color: #111; }
+/* Вторичная и «опасная» кнопки */
 .btn-secondary {
     display: inline-flex; align-items: center; justify-content: center;
     min-height: 34px; padding: 0 12px; border: 0; border-radius: 9px;
@@ -637,6 +651,7 @@ td.actions-cell { width: 1%; text-align: right; }
 .admin-form input[type="file"] { color: #aaa; font-size: 13px; }
 .checkbox-row { display: inline-flex; align-items: center; gap: 8px; color: #aaa; font-size: 13px; font-weight: 600; }
 .checkbox-row input { width: auto; }
+/* Редактор блоков новости */
 .news-blocks { display: flex; flex-direction: column; gap: 12px; }
 .news-block {
     display: flex; flex-direction: column; gap: 10px;
@@ -650,12 +665,13 @@ td.actions-cell { width: 1%; text-align: right; }
 }
 .image-item img { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; }
 .image-preview img { max-width: 220px; max-height: 160px; object-fit: contain; border-radius: 12px; border: 1px solid var(--line); }
+/* Миниатюра в таблице и бейджи видимости */
 .table-thumb { width: 46px; height: 46px; object-fit: cover; border-radius: 8px; }
 .badge { display: inline-flex; align-items: center; padding: 4px 9px; border-radius: 8px; font-size: 11px; font-weight: 700; }
 .badge-success { background: #11251a; color: var(--success); }
 .badge-muted { background: #242424; color: #999; }
 
-/* Admin panel */
+/* Панель администратора: плитки статистики, карточки, таблицы */
 .stats-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 16px; }
 .panel-card { padding: 23px; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); margin-bottom: 15px; }
 .panel-card p { margin: 0; }
@@ -675,7 +691,7 @@ td.actions-cell { width: 1%; text-align: right; }
 .empty-state { padding: 22px 0; }
 .logout-button { padding: 0 18px; min-height: 36px; background: var(--line); color: #ddd; font-size: 12px; }
 
-/* Security (2FA) */
+/* Безопасность (2FA), ранние стили: состояние, QR-код, секретный ключ */
 .security-card p + p, .security-card .auth-form { margin-top: 10px; }
 .security-status {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -710,14 +726,14 @@ td.actions-cell { width: 1%; text-align: right; }
 .inline-auth-form { max-width: 320px; }
 .auth-form .danger-button { background: #4a1f1f; color: #ffb3b3; }
 
-/* Tablet */
+/* Планшет: уже боковое меню */
 @media (max-width: 900px) {
     :root { --sidebar-w: 190px; --gap-x: 20px; }
     .sidebar { padding: 28px 18px; }
     .sidebar .brand { font-size: 22px; }
 }
 
-/* Mobile: sidebar becomes a top bar */
+/* Телефон: боковое меню превращается в верхнюю панель */
 @media (max-width: 640px) {
     :root { --gap-x: 16px; }
     .sidebar {
@@ -749,7 +765,7 @@ td.actions-cell { width: 1%; text-align: right; }
     .secret-value { flex-direction: column; align-items: stretch; }
 }
 
-/* Helpers */
+/* Вспомогательные стили: атрибут hidden, скрытие для экранных дикторов (sr-only), подсветка новой строки */
 [hidden] { display: none !important; }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 h2.tooltip { width: fit-content; }
@@ -759,7 +775,7 @@ h2.tooltip { width: fit-content; }
 .badge-button { border: 0; font-family: inherit; cursor: pointer; transition: filter .2s ease; }
 .badge-button:hover { filter: brightness(1.2); }
 
-/* Upload box (drag & drop + current images in a single element) */
+/* Зона загрузки картинок (drag & drop + текущие картинки в одном элементе); основной акцентный цвет */
 :root { --accent: #9b5cf6; }
 .media-box { position: relative; }
 .media-icon {
@@ -770,6 +786,7 @@ h2.tooltip { width: fit-content; }
 .media-box .hint { margin-top: 0 !important; color: var(--muted); }
 .upload-error { color: var(--danger); font-size: 12px; font-weight: 600; }
 
+/* Полоса прогресса загрузки */
 .upload-progress {
     position: absolute; left: 0; right: 0; bottom: 0; height: 4px; z-index: 2;
     background: rgba(255, 255, 255, .08); opacity: 0; transition: opacity .2s ease; pointer-events: none;
@@ -778,7 +795,7 @@ h2.tooltip { width: fit-content; }
 .uploading > .upload-progress, .uploading .upload-progress { opacity: 1; }
 .uploading img { opacity: .45; }
 
-/* Single (product avatar) */
+/* Одна картинка (иконка товара) */
 .media-box.single { width: min(100%, 260px); }
 .media-surface {
     position: relative; display: grid; place-items: center; aspect-ratio: 1 / 1; overflow: hidden;
@@ -801,7 +818,7 @@ h2.tooltip { width: fit-content; }
 .media-box.single .media-remove, .media-tile .media-remove { position: absolute; top: 10px; right: 10px; z-index: 3; }
 .media-tile .media-remove { top: 6px; right: 6px; min-height: 28px; padding: 0 9px; }
 
-/* Multiple (news images) */
+/* Несколько картинок (изображения новостей) */
 .media-box[data-uploader="multi"] {
     display: flex; flex-direction: column; gap: 12px; padding: 14px;
     border: 1px dashed #3a3a3a; border-radius: 16px; background: #0c0c0c;
@@ -821,7 +838,7 @@ h2.tooltip { width: fit-content; }
 }
 .media-drop:hover { background: #121212; }
 
-/* Product status menu: floats above the table, never shifts it */
+/* Меню статуса товара: всплывает поверх таблицы и не сдвигает её */
 .status-menu {
     position: fixed; z-index: 2000; display: flex; flex-direction: column; gap: 2px; min-width: 150px; padding: 6px;
     border: 1px solid #2c2c2c; border-radius: 12px; background: #1b1b1b; box-shadow: 0 12px 32px rgba(0, 0, 0, .55);
@@ -840,7 +857,7 @@ h2.tooltip { width: fit-content; }
 .status-menu button[data-color="purple"] { --color: #9003fc; }
 .status-menu button i { width: 7px; height: 7px; border-radius: 50%; background: var(--color); }
 
-/* Admin notifications: toasts that don't shift the layout */
+/* Уведомления админки: всплывающие плашки, не сдвигающие вёрстку */
 .toasts { position: fixed; top: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; width: min(360px, calc(100vw - 32px)); pointer-events: none; }
 .toasts .flash {
     margin: 0; padding: 13px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; pointer-events: auto;
@@ -849,7 +866,7 @@ h2.tooltip { width: fit-content; }
 .toasts .flash.leaving { opacity: 0; transform: translateX(16px); }
 @keyframes toast-in { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
 
-/* News text (HTML allowed) */
+/* Текст новостей (разрешён HTML): выравнивание, разделители, списки, цитаты, таблицы */
 .news-text { color: var(--muted); overflow-wrap: anywhere; line-height: 1.6; }
 .news-text .center { text-align: center; }
 .news-text .left { text-align: left; }
@@ -893,13 +910,13 @@ h2.tooltip { width: fit-content; }
 .news-text table { border-collapse: collapse; }
 .news-text th, .news-text td { padding: 6px 10px; border: 1px solid var(--line); }
 
-/* Tooltips inside news text */
+/* Подсказки внутри текста новостей: пунктирное подчёркивание и курсор-справка */
 .news-text .tooltip { width: fit-content; cursor: help; text-decoration: underline dotted #777; text-underline-offset: 3px; }
 .news-text .tooltip::after { text-decoration: none; }
 .field-tools { display: flex; align-items: center; gap: 10px; }
 .field-tools .hint { margin-top: 0 !important; }
 
-/* Legacy helper selectors retained for existing custom markup. Prefer tooltip-position. */
+/* Устаревшие классы tip-left / tip-right, оставлены для уже существующей разметки. Предпочтительно использовать tooltip-position. */
 .tooltip.tip-right::after {
     bottom: auto; top: 50%; left: calc(100% + 8px);
     transform: translateY(-50%) translateX(-4px); text-align: left;
@@ -911,7 +928,7 @@ h2.tooltip { width: fit-content; }
 }
 .tooltip.tip-left:hover::after, .tooltip.tip-left:focus-visible::after { transform: translateY(-50%) translateX(0); }
 
-/* "?" hint icon with a tooltip */
+/* Значок «?» с всплывающей подсказкой */
 .info-tip {
     display: inline-grid; place-items: center; width: 16px; height: 16px; margin-left: 6px; vertical-align: 1px;
     border: 1px solid #444; border-radius: 50%; color: var(--muted); background: transparent;
@@ -922,17 +939,17 @@ h2.tooltip { width: fit-content; }
 .info-tip::after { font-weight: 500; letter-spacing: normal; text-transform: none; }
 h2 .info-tip, h3 .info-tip { vertical-align: 2px; }
 
-/* Public: disabled Buy button */
+/* Публичная часть: неактивная кнопка «Оплатить» */
 .btn.btn-disabled { background: #2a2a2a; color: #777; cursor: not-allowed; position: relative; }
 .btn.btn-disabled:hover { color: #777; opacity: 1; }
 
-/* Goods: Buy-button target */
+/* Товары: настройка назначения кнопки «Купить» и блок ошибки загрузки */
 .buy-field .form-grid { align-items: start; }
 .buy-field select, .buy-field input { min-height: 42px; }
 .buy-note { align-self: center; font-size: 13px; }
 .upload-error { display: block; padding: 9px 12px; border: 1px solid #4a2424; border-radius: 10px; background: #291616; line-height: 1.45; }
 
-/* Security */
+/* Страница безопасности: заголовок, индикатор 2FA, QR-код, формы ввода кода */
 .security-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .security-head p { font-size: 13px; }
 .security-pill {
@@ -987,13 +1004,13 @@ h2 .info-tip, h3 .info-tip { vertical-align: 2px; }
     .security-form-row { flex-direction: column; }
 }
 
-/* Clickable UUID / KEY values */
+/* Кликабельные значения UUID и KEY (копируются по нажатию) */
 .users-table .copy-value { cursor: copy; user-select: text; transition: color .18s ease; }
 .users-table .copy-value:hover { color: var(--white); }
 .users-table .copy-value.copied { color: #8bd49a; }
 
 
-/* Product icon type chooser */
+/* Выбор типа иконки товара и общие правила подсказок в описаниях */
 .icon-type-toggle { align-self: flex-start; margin-bottom: 10px; }
 .icon-type-options { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
 .product-description { overflow-wrap: anywhere; }
@@ -1002,14 +1019,14 @@ h2 .info-tip, h3 .info-tip { vertical-align: 2px; }
 .tooltip[tooltip-position="up"]:hover::after,
 .tooltip[tooltip-position="up"]:focus-visible::after { transform: translate(-50%, 0); }
 
-/* Keep chooser panels hidden even when their layout uses flex. */
+/* Панели выбора остаются скрытыми, даже если для них задана flex-раскладка. */
 .icon-type-options[hidden] { display: none !important; }
 
 .news-text .tooltip:hover, .news-text .tooltip:focus-visible,
 .product-description .tooltip:hover, .product-description .tooltip:focus-visible { z-index: 1300; }
 
 
-/* Rich content authored in news and product descriptions */
+/* Форматированное содержимое, написанное в новостях и описаниях товаров */
 .news-text, .product-description { min-width: 0; overflow-wrap: anywhere; }
 .news-text > *, .product-description > * { max-width: 100%; }
 .news-text p, .product-description p { color: inherit; margin: 8px 0; }
@@ -1036,7 +1053,7 @@ h2 .info-tip, h3 .info-tip { vertical-align: 2px; }
 }
 
 
-/* Goods editor layout refinements */
+/* Доработка раскладки редактора товара: прокручиваемый список цен и поле «Купить» */
 .price-editor-scroll {
     max-height: 205px; /* ровно 4 строки цен, дальше — прокрутка */
     overflow-y: auto;
@@ -1053,7 +1070,7 @@ h2 .info-tip, h3 .info-tip { vertical-align: 2px; }
 }
 
 
-/* Updated goods editor and product price layout */
+/* Обновлённая раскладка редактора товара: иконка и название, сетка настроек */
 .goods-identity {
     display: grid;
     grid-template-columns: minmax(180px, 260px) minmax(0, 1fr);
@@ -1094,7 +1111,7 @@ h2 .info-tip, h3 .info-tip { vertical-align: 2px; }
 }
 
 
-/* Goods / news lists: no horizontal scroll on desktop (tooltips stay visible), scroll on small screens */
+/* Списки товаров и новостей: на десктопе без горизонтальной прокрутки (подсказки остаются видимыми), на малых экранах — с прокруткой */
 .table-fit { overflow: visible; }
 .table-fit .users-table th,
 .table-fit .users-table td { white-space: normal; }
@@ -1107,7 +1124,7 @@ h2 .info-tip, h3 .info-tip { vertical-align: 2px; }
     .table-fit .users-table td { white-space: nowrap; }
 }
 
-/* Product description: column layout + rich content from news (devider, tooltip, links) + "∘" list marker */
+/* Описание товара: колонка + форматированное содержимое как в новостях (devider, tooltip, ссылки) + маркер списка «∘» */
 .product-description {
     display: flex;
     flex-direction: column;
@@ -1120,7 +1137,7 @@ h2 .info-tip, h3 .info-tip { vertical-align: 2px; }
 .product-description p { margin: 0; color: inherit; }
 .product-description strong, .product-description b { color: var(--text); }
 
-/* Lists: "∘" instead of the default bullet */
+/* Списки: «∘» вместо стандартного маркера */
 .product-description ul,
 .product-description ol { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
 .product-description li { position: relative; margin: 0; padding-left: 1.15em; list-style: none; }
@@ -1130,7 +1147,7 @@ h2 .info-tip, h3 .info-tip { vertical-align: 2px; }
 .product-description ol > li::before { content: counter(product-li) "."; position: absolute; left: 0; color: var(--text-secondary); }
 .product-description li > p { display: inline; }
 
-/* Dividers: <div class="devider left|right" devider-text="…"></div> */
+/* Разделители: <div class="devider left|right" devider-text="…"></div> */
 .product-description .devider {
     display: flex;
     align-items: center;
@@ -1150,12 +1167,12 @@ h2 .info-tip, h3 .info-tip { vertical-align: 2px; }
 .product-description .devider:not([devider-text])::before,
 .product-description .devider:not([devider-text])::after { display: none; }
 
-/* Links */
+/* Ссылки */
 .product-description a { color: #9dc5ff; text-decoration: underline; }
 .product-description a:hover { color: var(--white); }
 .product-description > a { width: fit-content; }
 
-/* Tooltips: same look as in news, never stretched to the full column width */
+/* Подсказки: выглядят как в новостях и не растягиваются на всю ширину колонки */
 .product-description .tooltip {
     display: inline;
     width: auto;

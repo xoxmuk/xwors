@@ -1,3 +1,9 @@
+/*
+ * Общий клиентский скрипт сайта и админки.
+ * Каждый блок ниже отвечает за свою возможность и находит нужные элементы по data-атрибутам.
+ */
+
+// Кнопка «Копировать» (data-copy="<селектор>"): копирует текст элемента в буфер обмена и на 1,5 с меняет подпись на «Скопировано»
 document.addEventListener('click', function (e) {
   var btn = e.target.closest('[data-copy]');
   if (!btn) return;
@@ -31,7 +37,8 @@ document.querySelectorAll('[data-qr]').forEach(function (el) {
   el.removeAttribute('title');
 });
 
-// Динамические блоки новости
+// Динамические блоки новости: «+ Добавить блок» клонирует шаблон, «Удалить» убирает блок
+// (последний оставшийся блок не удаляется, а только очищается)
 document.addEventListener('click', function (e) {
   var addButton = e.target.closest('[data-add-block]');
   if (addButton) {
@@ -62,8 +69,10 @@ document.addEventListener('submit', function (e) {
 
 // ---------- Загрузка изображений (реальный прогресс через XMLHttpRequest) ----------
 (function () {
+  // Допустимые типы файлов (совпадают с проверкой на сервере)
   var ALLOWED = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/avif'];
 
+  // Превращает HTTP-статус ответа в понятное сообщение об ошибке для пользователя
   function httpError(status, notJson) {
     if (status === 413) return 'Файл слишком большой для сервера (413).';
     if (status === 401 || status === 403) return 'Нет доступа или сессия истекла. Обновите страницу и войдите снова.';
@@ -86,6 +95,8 @@ document.addEventListener('submit', function (e) {
     }).catch(function () { return false; });
   }
 
+  // Отправляет файл на /api/upload-image (FormData с CSRF-токеном и папкой).
+  // Возвращает { promise, abort }: промис выдаёт путь к сохранённой картинке, abort отменяет загрузку.
   function sendFile(box, file, onProgress) {
     var xhr = new XMLHttpRequest();
     var promise = new Promise(function (resolve, reject) {
@@ -114,6 +125,8 @@ document.addEventListener('submit', function (e) {
     return { promise: promise, abort: function () { xhr.abort(); } };
   }
 
+  // Быстрая проверка файла на стороне браузера: не пустой ли, допустимый ли формат, не больше ли лимита (data-max-bytes).
+  // Возвращает текст ошибки или пустую строку.
   function checkFile(box, file) {
     var max = parseInt(box.getAttribute('data-max-bytes'), 10) || 0;
     var label = '«' + file.name + '»: ';
@@ -123,6 +136,7 @@ document.addEventListener('submit', function (e) {
     return '';
   }
 
+  // Показывает (или скрывает при пустом сообщении) ошибку под зоной загрузки; append — дописать к уже показанной
   function setError(box, message, append) {
     var el = box.parentElement.querySelector('[data-error]');
     if (!el) return;
@@ -138,6 +152,7 @@ document.addEventListener('submit', function (e) {
     form.querySelectorAll('button[type="submit"]').forEach(function (b) { b.disabled = form._pending > 0; });
   }
 
+  // Подключает выбор файлов: клик/Enter/Пробел по зоне открывает диалог, а также перетаскивание файлов (drag & drop)
   function bindDrop(box, drop, fileInput, onFiles) {
     drop.addEventListener('click', function () { fileInput.click(); });
     drop.addEventListener('keydown', function (e) {
@@ -158,9 +173,10 @@ document.addEventListener('submit', function (e) {
     });
   }
 
+  // Устанавливает ширину полосы прогресса в процентах
   function setProgress(bar, value) { if (bar) bar.style.width = value + '%'; }
 
-  // Одна картинка (аватарка товара)
+  // Одна картинка (иконка товара): загрузка, предпросмотр, удаление, а также ввод ссылки (если есть поле [data-url])
   function initSingle(box) {
     var value = box.querySelector('[data-value]');
     var fileInput = box.querySelector('[data-file]');
@@ -173,6 +189,7 @@ document.addEventListener('submit', function (e) {
     var urlMode = !!(urlInput && urlInput.value.trim() !== '');
     var current = null;
 
+    // Показывает превью картинки или пустую зону загрузки
     function render(src) {
       if (src) { img.src = src; img.hidden = false; } else { img.removeAttribute('src'); img.hidden = true; }
       empty.hidden = !!src;
@@ -181,6 +198,7 @@ document.addEventListener('submit', function (e) {
     }
     render(img.getAttribute('src') || '');
 
+    // Проверяет выбранный файл (размер, формат, читается ли браузером) и запускает загрузку
     function start(file) {
       setError(box, '');
       var problem = checkFile(box, file);
@@ -191,6 +209,7 @@ document.addEventListener('submit', function (e) {
       });
     }
 
+    // Загружает файл на сервер; при новой загрузке предыдущая отменяется. После успеха путь записывается в скрытое поле
     function upload(file) {
       if (current) current.abort();
       var up = current = sendFile(box, file, function (p) { setProgress(bar, p); });
@@ -233,7 +252,7 @@ document.addEventListener('submit', function (e) {
     });
   }
 
-  // Несколько картинок (новости): уже загруженные + новые в одном блоке
+  // Несколько картинок: уже загруженные + новые в одном блоке, с ограничением числа файлов за раз (data-batch) и всего (data-total)
   function initMulti(box) {
     var grid = box.querySelector('[data-grid]');
     var fileInput = box.querySelector('[data-file]');
@@ -242,6 +261,7 @@ document.addEventListener('submit', function (e) {
     var total = parseInt(box.getAttribute('data-total'), 10) || 12;
     var field = box.getAttribute('data-field') || 'new_image[]';
 
+    // Добавляет плитку с превью, прогрессом и кнопкой «Удалить»; после загрузки добавляет скрытое поле с путём
     function addTile(file) {
       var tile = document.createElement('div');
       tile.className = 'media-tile uploading';
@@ -303,6 +323,7 @@ document.addEventListener('submit', function (e) {
     });
   }
 
+  // Инициализируем все зоны загрузки на странице
   document.querySelectorAll('[data-uploader]').forEach(function (box) {
     if (box.getAttribute('data-uploader') === 'single') initSingle(box); else initMulti(box);
   });
@@ -318,13 +339,17 @@ document.addEventListener('submit', function (e) {
 
 // ---------- Меню смены статуса товара (всплывает поверх списка) ----------
 (function () {
+  // menu — открытое меню, trigger — кнопка статуса, к которой оно привязано
   var menu = null, trigger = null;
 
+  // Закрывает меню и сбрасывает состояние кнопки
   function close() {
     if (menu) { menu.remove(); menu = null; }
     if (trigger) { trigger.setAttribute('aria-expanded', 'false'); trigger = null; }
   }
 
+  // Открывает меню статусов под кнопкой (или над ней, если снизу не хватает места).
+  // Выбор пункта подставляет id и статус в скрытую форму и отправляет её.
   function open(btn) {
     var form = document.getElementById('good-status-form');
     var source = document.getElementById('good-status-options');
@@ -359,6 +384,7 @@ document.addEventListener('submit', function (e) {
     btn.setAttribute('aria-expanded', 'true');
   }
 
+  // Клик по кнопке статуса открывает/закрывает меню, клик вне меню — закрывает его
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('[data-status-menu]');
     if (!btn) { if (menu && !e.target.closest('.status-menu')) close(); return; }
@@ -366,6 +392,7 @@ document.addEventListener('submit', function (e) {
     close();
     open(btn);
   });
+  // Меню закрывается по Esc, при изменении размера окна и при прокрутке (чтобы не «отрываться» от кнопки)
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
   window.addEventListener('resize', close);
   window.addEventListener('scroll', close, true);
@@ -375,12 +402,14 @@ document.addEventListener('submit', function (e) {
 (function () {
   var items = document.querySelectorAll('.admin-main .flash');
   if (!items.length) return;
+  // Контейнер для всплывающих плашек (справа сверху)
   var box = document.createElement('div');
   box.className = 'toasts';
   box.setAttribute('role', 'status');
   document.body.appendChild(box);
   items.forEach(function (el) {
     box.appendChild(el);
+    // Плашка исчезает сама: ошибки через 7 секунд, успехи через 4; клик закрывает сразу
     var timer = setTimeout(hide, el.classList.contains('form-error') ? 7000 : 4000);
     function hide() {
       clearTimeout(timer);
@@ -400,6 +429,7 @@ document.addEventListener('submit', function (e) {
 
 // ---------- Копирование UUID и KEY по нажатию на значение ----------
 (function () {
+  // Копирует текст в буфер обмена: через Clipboard API, а в небезопасном контексте (без HTTPS) — через временное поле и execCommand
   function copyText(value) {
     if (navigator.clipboard && window.isSecureContext) {
       return navigator.clipboard.writeText(value);
@@ -422,6 +452,7 @@ document.addEventListener('submit', function (e) {
     });
   }
 
+  // Копирует значение из data-copy-value и на ~1 секунду подсвечивает элемент классом copied
   function activate(target) {
     var value = target.getAttribute('data-copy-value');
     if (!value) return;
@@ -437,6 +468,7 @@ document.addEventListener('submit', function (e) {
     }).catch(function () {});
   }
 
+  // Копирование по клику мышью и с клавиатуры (Enter / Пробел) — для доступности
   document.addEventListener('click', function (event) {
     var target = event.target.closest('[data-copy-value]');
     if (target) activate(target);
@@ -450,7 +482,8 @@ document.addEventListener('submit', function (e) {
   });
 })();
 
-// ---------- Кнопка «+ Tooltip» в описании новости ----------
+// ---------- Кнопка «+ Tooltip» в описании новости и товара ----------
+// Оборачивает выделенный в textarea текст в <span tooltip-text="Подсказка"> и ставит курсор в текст подсказки
 document.addEventListener('click', function (e) {
   var btn = e.target.closest('[data-insert-tooltip]');
   if (!btn) return;
@@ -466,6 +499,7 @@ document.addEventListener('click', function (e) {
 });
 
 // ---------- Выбор типа иконки товара ----------
+// Переключатель «загрузить файл / указать URL» (работает, если в форме есть соответствующие элементы)
 (function () {
   var form = document.querySelector('#goods-form form');
   if (!form) return;
@@ -506,6 +540,7 @@ document.addEventListener('click', function (e) {
   var box = document.querySelector('[data-buy]');
   if (!box) return;
   var select = box.querySelector('[data-buy-type]');
+  // Показывает панель, соответствующую выбранному типу, и отключает поля остальных панелей
   function sync() {
     box.querySelectorAll('[data-buy-panel]').forEach(function (panel) {
       var active = panel.getAttribute('data-buy-panel') === select.value;
@@ -524,7 +559,9 @@ document.addEventListener('click', function (e) {
 
 
 // ---------- Выбор варианта цены в карточке товара ----------
+// По выбору срока пересчитывает итоговую цену, старую цену и размер скидки (скидка варианта + скидка товара, максимум 100%)
 (function () {
+  // Закрывает все выпадающие списки сроков, кроме указанного
   function closeMenus(except) {
     document.querySelectorAll('[data-duration-menu]').forEach(function (menu) {
       if (menu === except) return;
@@ -533,9 +570,11 @@ document.addEventListener('click', function (e) {
       if (trigger) trigger.setAttribute('aria-expanded', 'false');
     });
   }
+  // Форматирует число как цену в рублях по правилам ru-RU («1 234,50 ₽»)
   function money(value) {
     return (Number.isInteger(value) ? value.toLocaleString('ru-RU') : value.toLocaleString('ru-RU', {minimumFractionDigits: 2, maximumFractionDigits: 2})) + ' ₽';
   }
+  // Один обработчик на весь документ: открытие списка, выбор варианта цены, закрытие по клику вне списка
   document.addEventListener('click', function (event) {
     var trigger = event.target.closest('[data-duration-trigger]');
     if (trigger) {
@@ -570,14 +609,17 @@ document.addEventListener('click', function (e) {
     }
     if (!event.target.closest('.duration-picker')) closeMenus(null);
   });
+  // Esc закрывает открытые списки
   document.addEventListener('keydown', function (event) { if (event.key === 'Escape') closeMenus(null); });
 })();
 
 // ---------- Редактор JSON цен товара ----------
+// Редактор хранит варианты цены как JSON в скрытом поле #good-prices-json, которое отправляется вместе с формой
 (function () {
   var editor = document.querySelector('[data-price-editor]');
   if (!editor) return;
   var hidden = document.getElementById('good-prices-json');
+  // Собирает значения всех строк редактора в JSON и записывает в скрытое поле
   function sync() {
     var items = [];
     editor.querySelectorAll('[data-price-row]').forEach(function (row) {
@@ -589,6 +631,7 @@ document.addEventListener('click', function (e) {
     });
     hidden.value = JSON.stringify(items);
   }
+  // Подключает к строке обновление JSON при вводе и кнопку удаления (последнюю строку удалить нельзя)
   function bind(row) {
     row.querySelectorAll('input').forEach(function (input) { input.addEventListener('input', sync); });
     row.querySelector('[data-price-remove]').addEventListener('click', function () {
@@ -597,6 +640,7 @@ document.addEventListener('click', function (e) {
     });
   }
   editor.querySelectorAll('[data-price-row]').forEach(bind);
+  // Кнопка «+ Добавить цену»: создаёт новую строку варианта
   var add = document.querySelector('[data-price-add]');
   if (add) add.addEventListener('click', function () {
     var row = document.createElement('div');
@@ -604,6 +648,7 @@ document.addEventListener('click', function (e) {
     row.innerHTML = '<input aria-label="Название варианта" data-price-name placeholder="Например, 30d"><input aria-label="Цена" data-price-value type="number" min="0" step="0.01" placeholder="Цена, ₽"><input aria-label="Скидка в процентах" data-price-discount type="number" min="0" max="100" step="0.01" value="0" placeholder="Скидка, %"><button type="button" class="btn-secondary btn-danger" data-price-remove>Удалить</button>';
     editor.appendChild(row); bind(row); sync(); row.querySelector('[data-price-name]').focus();
   });
+  // Перед отправкой формы ещё раз синхронизируем JSON
   var form = editor.closest('form');
   if (form) form.addEventListener('submit', sync);
 })();

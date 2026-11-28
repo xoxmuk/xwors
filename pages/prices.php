@@ -1,4 +1,5 @@
 <?php
+/** Страница «Покупка»: витрина опубликованных товаров с выбором срока подписки, ценой, скидкой и кнопкой «Оплатить». */
 require_once __DIR__ . '/_layout.php';
 require_once __DIR__ . '/../lib/content.php';
 public_start('prices', 'Покупка');
@@ -6,6 +7,7 @@ public_start('prices', 'Покупка');
 $goods = [];
 $error = null;
 
+// Загружаем видимые товары; при сбое БД показываем сообщение об ошибке
 try {
     $goods = db()->query(
         'SELECT id, status, image, name, description, prices, discount, purchase, create_at FROM goods WHERE hidden = FALSE ORDER BY create_at DESC, id DESC'
@@ -27,7 +29,9 @@ try {
         <div class="card"><p>Товары скоро появятся.</p></div>
 <?php else: ?>
         <div class="products">
+<?php /* Карточка товара */ ?>
 <?php foreach ($goods as $good): ?>
+<?php /* Цвет и подпись статуса (Undetected/Detected/Updating) */ ?>
 <?php $meta = goods_status_meta((string)$good['status']); ?>
             <article class="card col product">
                 <div class="product-visual">
@@ -47,6 +51,8 @@ try {
 <?php endif; ?>
                     </div>
                 </div>
+                <?php /* Цена: берём первый вариант, итоговая скидка = скидка варианта + общая скидка товара (максимум 100%).
+                         Остальные варианты передаются в data-атрибуте; переключение срока выполняет scripts/app.js */ ?>
                 <?php $priceOptions = goods_prices((string)$good['prices']); $firstPrice = $priceOptions[0]; $productDiscount = (float)($good['discount'] ?? 0); $totalDiscount = min(100, (float)$firstPrice['discount'] + $productDiscount); ?>
                 <div class="product-price-row" data-product-discount="<?= e((string)$productDiscount) ?>" data-price-options="<?= e(json_encode($priceOptions, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>">
                     <div class="product-price-stack">
@@ -67,6 +73,7 @@ try {
                         </div>
                     </div>
                 </div>
+<?php /* Кнопка «Оплатить»: неактивна / внутренняя страница / внешняя ссылка в новой вкладке */ ?>
 <?php $purchase = goods_purchase((string)$good['purchase']); $buyType = $purchase['type']; $buyUrl = $purchase['url']; ?>
 <?php if ($buyType === 'none' || $buyUrl === ''): ?>
                 <span class="btn btn-disabled tooltip" aria-disabled="true" tabindex="0" tooltip-text="Способ покупки пока не указан">Оплатить</span>

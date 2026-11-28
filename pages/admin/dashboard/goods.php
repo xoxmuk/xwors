@@ -1,16 +1,19 @@
 <?php
+/** Раздел «Товары»: список товаров (смена статуса и видимости кликом) и форма создания/редактирования. */
 declare(strict_types=1);
 require_once __DIR__ . '/_layout.php';
 require_once __DIR__ . '/../../../lib/content.php';
 
 $adminLogin = dash_login();
 $csrf = csrf_token();
+// ?edit=<id> — редактирование существующего товара, ?new=1 — создание нового
 $editId = (int)($_GET['edit'] ?? 0);
 $isNew = isset($_GET['new']);
 $goods = [];
 $editing = null;
 $error = null;
 
+// Загружаем список товаров и, если открыто редактирование, полную запись редактируемого товара
 try {
     $goods = db()->query(
         'SELECT id, status, image, name, prices, discount, hidden, create_at FROM goods ORDER BY create_at DESC, id DESC'
@@ -27,6 +30,7 @@ try {
     $error = 'Не удалось загрузить товары. Проверьте подключение к базе данных.';
 }
 
+// Начальные значения полей формы: данные редактируемого товара или значения по умолчанию для нового
 $formStatus = (string)($editing['status'] ?? 'undetected');
 if (!isset(goods_statuses()[$formStatus])) $formStatus = 'undetected';
 $formImage = (string)($editing['image'] ?? '');
@@ -38,8 +42,10 @@ $purchase = goods_purchase(isset($editing['purchase']) ? (string)$editing['purch
 $formBuyType = $purchase['type'];
 $formBuyUrl = $purchase['url'];
 $formHidden = !empty($editing['hidden']);
+// Форму показываем при создании нового товара или при редактировании найденного
 $showForm = $isNew || $editing !== null;
 
+/** Форматирует дату как «дд.мм.гггг чч:мм» (прочерк, если даты нет). */
 function admin_goods_date(?string $value): string
 {
     return $value ? date('d.m.Y H:i', strtotime($value)) : '—';
@@ -47,6 +53,7 @@ function admin_goods_date(?string $value): string
 
 dash_start('goods', 'Товары');
 ?>
+<?php /* Уведомления об итогах действий и ошибки валидации (всплывающие плашки, см. scripts/app.js) */ ?>
 <?php if (isset($_GET['saved'])): ?><p class="success-message flash">Товар сохранён.</p><?php endif; ?>
 <?php if (isset($_GET['deleted'])): ?><p class="success-message flash">Товар удалён.</p><?php endif; ?>
 <?php if (isset($_GET['toggled'])): ?><p class="success-message flash"><?= match ($_GET['toggled']) { 'hidden' => 'Товар скрыт.', 'visible' => 'Товар опубликован.', default => 'Данные товара обновлены.' } ?></p><?php endif; ?>
@@ -60,6 +67,7 @@ dash_start('goods', 'Товары');
 <?php endif; ?>
 <?php if ($error): ?><p class="form-error"><?= e($error) ?></p><?php endif; ?>
 
+<?php /* Таблица товаров */ ?>
 <section class="panel-card table-panel">
     <div class="table-heading">
         <div>
@@ -86,6 +94,7 @@ dash_start('goods', 'Товары');
                 </tr>
             </thead>
             <tbody>
+<?php /* Строка товара: миниатюра, название, статус (меню выбора), видимость (переключатель), действия */ ?>
 <?php foreach ($goods as $item): ?>
 <?php $meta = goods_status_meta((string)$item['status']); ?>
                 <tr>
@@ -95,6 +104,7 @@ dash_start('goods', 'Товары');
                     </td>
                     <td><?= e((string)$item['name']) ?: '—' ?></td>
                     <td>
+                        <?php /* Кнопка статуса: по клику app.js открывает меню выбора нового статуса */ ?>
                         <button class="status status-button tooltip" tooltip-position="up" tooltip-text="Нажмите, чтобы выбрать другой статус" type="button" data-status-menu data-id="<?= (int)$item['id'] ?>" data-current="<?= e((string)$item['status']) ?>" data-color="<?= e($meta['color']) ?>" aria-haspopup="menu" aria-expanded="false"><i></i> <?= e($meta['label']) ?></button>
                     </td>
                     <td>
@@ -120,15 +130,18 @@ dash_start('goods', 'Товары');
             </tbody>
         </table>
     </div>
+    <?php /* Скрытая форма: app.js подставляет в неё id товара и новый статус и отправляет */ ?>
     <form method="post" action="/api/set-good-status" id="good-status-form" hidden>
         <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
         <input type="hidden" name="id" value="">
         <input type="hidden" name="status" value="">
     </form>
+    <?php /* Список статусов в JSON для построения меню (теги и & экранируются для безопасности) */ ?>
     <script type="application/json" id="good-status-options"><?= json_encode(array_map(fn($k, $m) => ['key' => $k, 'label' => $m['label'], 'color' => $m['color']], array_keys(goods_statuses()), array_values(goods_statuses())), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
 <?php endif; ?>
 </section>
 
+<?php /* Форма создания/редактирования товара */ ?>
 <?php if ($showForm): ?>
 <section class="panel-card" id="goods-form">
     <h2><?= $editing ? 'Редактировать товар #' . (int)$editing['id'] : 'Новый товар' ?></h2>
@@ -136,9 +149,11 @@ dash_start('goods', 'Товары');
         <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
         <input type="hidden" name="id" value="<?= (int)($editing['id'] ?? 0) ?>">
 
+        <?php /* Блок «Иконка + название» */ ?>
         <div class="goods-identity">
         <div class="field">
             <span class="field-label">Иконка товара</span>
+            <?php /* Зона загрузки картинки (drag & drop). Скрытое поле image: __keep__ — оставить текущую, пусто — удалить, иначе путь новой */ ?>
             <div class="media-box single" data-uploader="single" data-folder="goods" data-max-bytes="2097152" data-csrf="<?= e($csrf) ?>">
                 <input type="hidden" name="image" value="<?= $formImage !== '' ? '__keep__' : '' ?>" data-value>
                 <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" hidden data-file>
@@ -163,9 +178,11 @@ dash_start('goods', 'Товары');
         </div>
         </div>
 
+        <?php /* Настройки: слева — варианты цены, справа — скидка, статус, кнопка «Купить», видимость */ ?>
         <div class="form-grid goods-settings-grid">
             <div class="field goods-prices-field">
                 <span class="field-label">Варианты цены <span class="info-tip tooltip" tabindex="0" role="note" tooltip-text="Название (например, 1d), цена и скидка в процентах. Скидка рассчитывается от указанной цены.">?</span></span>
+                <?php /* Редактор цен хранит варианты в этом скрытом JSON-поле, app.js обновляет его при каждом изменении */ ?>
                 <input type="hidden" name="prices" id="good-prices-json" value="<?= e(json_encode($formPrices, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>">
                 <div class="price-editor-scroll" data-price-scroll>
                 <div class="price-editor" data-price-editor>
@@ -194,6 +211,7 @@ dash_start('goods', 'Товары');
 <?php endforeach; ?>
                 </select>
             </div>
+        <?php /* Назначение кнопки «Купить»: тип выбирается списком, для каждого типа показывается своя панель (app.js) */ ?>
         <div class="field buy-field buy-field-right" data-buy>
             <span class="field-label">Кнопка «Купить» <span class="info-tip tooltip" tabindex="0" tooltip-text="Куда попадёт посетитель после нажатия на кнопку «Купить» на странице товара.">?</span></span>
             <div class="buy-options">
@@ -227,6 +245,7 @@ dash_start('goods', 'Товары');
 
 
 
+        <?php /* Описание: строка с «∘» — пункт списка, поддерживаются HTML, devider, tooltip и ссылки */ ?>
         <div class="field">
             <label for="good-description">Описание</label>
             <textarea id="good-description" name="description" rows="6" placeholder="∘ Норекоил&#10;∘ ESP&#10;&lt;div class=&quot;devider left&quot; devider-text=&quot;Раздел&quot;&gt;&lt;/div&gt;&#10;∘ Текст&#10;&lt;a href=&quot;#&quot;&gt;Ссылка&lt;/a&gt;"><?= e($formDescription) ?></textarea>
